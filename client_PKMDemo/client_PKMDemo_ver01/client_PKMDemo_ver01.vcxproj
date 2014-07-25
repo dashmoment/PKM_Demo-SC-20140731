@@ -81,6 +81,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="simpleclienttest.cpp" />
     <ClCompile Include="t_client.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -80,18 +80,17 @@ char* pipe_client::read_msg(){
 
 int pipe_client::send_msg(char msg[]){
 
-		char *data_c;
 		const int size = MultiByteToWideChar(CP_ACP, 0, msg, -1, NULL, 0);
 		wchar_t *pWStr = new wchar_t[size+1];
 		MultiByteToWideChar(CP_ACP, 0, msg, -1, pWStr, size);
 
 		wchar_t data[] = L"*******************************************";
 		
-	
+		
 		DWORD numBytesWritten ;
 		DWORD cbResponse = sizeof(data);
 
-		int result = WriteFile(
+		BOOL result = WriteFile(
 		    pipe, // handle to our outbound pipe
 			pWStr, // data to send
 			cbResponse, // length of data to send (bytes)

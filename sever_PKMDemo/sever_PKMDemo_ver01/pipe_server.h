@@ -67,7 +67,7 @@ int pipe_sever::init_pipe(){
 
 int pipe_sever::send_msg(char msg[]){
 
-		char *data_c;
+		
 		const int size = MultiByteToWideChar(CP_ACP, 0, msg, -1, NULL, 0);
 		wchar_t *pWStr = new wchar_t[size+1];
 		MultiByteToWideChar(CP_ACP, 0, msg, -1, pWStr, size);
@@ -75,7 +75,7 @@ int pipe_sever::send_msg(char msg[]){
 		wchar_t data[] = L"*******************************************";
 		
 	
-		DWORD numBytesWritten ;
+		DWORD numBytesWritten ; 
 		DWORD cbResponse = sizeof(data);
 
 		int result = WriteFile(
@@ -118,9 +118,9 @@ char* pipe_sever::read_msg(){
 
 	if (!fFinishRead){   
 			
-             wprintf(L"ReadFile from pipe failed \n");
+            wprintf(L"ReadFile from pipe failed \n");
 			 CloseHandle(pipe);	
-			 //system("pause");
+			 system("pause");
 			
             return NULL;
     }
