@@ -74,6 +74,8 @@ float rw_y =  2.228;
 float rh_x = 0.773;
 float pre_bias;   //bias for moving direction
 
+int sc_rate = 3.4;
+
 ////********************Function****************************
 void on_mouse4(int event, int x,int y,int flags, void* param);
 CvPoint tracking_moment(IplImage* treatedimg , IplImage* result_img);
@@ -86,11 +88,12 @@ int main(){
 
 	int init_pipe = 0;
 
+	int recv_num = 0;
 	char* recv_data;
 	char* endnote = "finished";
 
 	
-    //init_pipe = ps->init_pipe();
+    init_pipe = ps->init_pipe();   //// inti pipe server
 		
 	GrabImage *grab = new GrabImage(); 
 
@@ -187,7 +190,7 @@ start:
 			//****************chose best match template**************************
 			for(int i = 0 ; i < tempdata.size() ; i++){
 
-				cout<<tempdata.size()<<endl;
+				//cout<<tempdata.size()<<endl;
 
 				size.width = DST_IMG_WIDTH - tempdata[i]->width  + 1;      
 				size.height = DST_IMG_HEIGH - tempdata[i]->height + 1;
@@ -228,10 +231,9 @@ start:
 			 
 			cout<<"Recognized stage clear"<<endl;
 
-			if(rs232_idx == 0 && v_grap.size() > 0){
+			if(rs232_idx == 0 && v_grap.size() > 0){ //// 1st sender
 
-				
-
+			
 				char pre_x[10];
 				sprintf(pre_x, "%.3f", tran_2GX(v_grap[0].y));
 				ps->send_msg(pre_x);
@@ -246,36 +248,27 @@ start:
 				sprintf(temp_id, "%d",  no_sim+1);
 				ps->send_msg(temp_id);
 				
-				/*cout<<"img_x= "<<v_grap[0].x<<endl<<"img_y= "<<v_grap[0].y<<endl;	
-				com->write_port(pre_fetch(v_grap[0]));
-				Sleep(1000);*/
-
-				/*t_str = "&1b23r";
-				com->write_port(t_str);
-				Sleep(500);*/
-
-				/*char roi_width[10];
-				sprintf(roi_width, "%d", tempdata[no_sim]->width);
-				ps->send_msg(roi_width);
-
-
-				char roi_height[10];
-				sprintf(roi_height, "%d",  tempdata[no_sim]->height);
-				ps->send_msg(roi_height);*/
-			
+				
 				cout<<"Send to client"<<endl;
 				rs232_idx = 1;
 				
 			}
 
-			cout<<"Send to clinet stage clear"<<endl;
-			/*recv_data = ps->read_msg();
+			if(rs232_idx == 1){
 
-			int end = strcmp(endnote,recv_data);
+			
+				recv_num = atoi(ps->read_msg()); //// 1st reader
+			
+				//char endnote[] = "1";
+				//int end = recv_num;
+   
+				cout<<"Send to clinet stage clear "<< recv_num <<endl;
+							
+				if(recv_num == 0){
+					rs232_idx = 0;
+				}
 
-			if(end == 0){
-				rs232_idx = 0;
-			}*/
+			}
 
 
 
@@ -341,11 +334,17 @@ void on_mouse4(int event, int x,int y,int flags, void* param){
 		if(ROIImg != NULL){		
 			temp_num++;
 
+			
+
+			IplImage * client_temp = cvCreateImage(cvSize(ROIImg->width*sc_rate , ROIImg->height*sc_rate) , IPL_DEPTH_8U,3);
+
 			char temp[50];
 			char temp2[50] ;
 			cout<<"write file no. = "<<temp_num<<endl;
 			sprintf(temp, "C://temp_img/server/temp_%d.jpg",temp_num);
-			sprintf(temp2, "C://temp_img/client/temp_%d.jpg",temp_num);
+			cvResize(ROIImg, client_temp);
+			sprintf(temp2, "C://temp_img/client/temp_%d.jpg",client_temp);
+
 			cvSaveImage(temp,  ROIImg);
 			cvSaveImage(temp2,  ROIImg);
 
