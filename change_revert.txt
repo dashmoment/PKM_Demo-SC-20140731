@@ -2,4 +2,7 @@ change revert test
 1
 2
 3
+<<<<<<< HEAD
 4
+=======
+>>>>>>> parent of 868f6b3... change 3
