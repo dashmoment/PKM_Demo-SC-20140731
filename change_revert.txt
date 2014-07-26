@@ -1,4 +1,9 @@
 change revert test
 1
 2
+<<<<<<< HEAD
 
+=======
+3
+4
+>>>>>>> parent of a253ed0... change 4
