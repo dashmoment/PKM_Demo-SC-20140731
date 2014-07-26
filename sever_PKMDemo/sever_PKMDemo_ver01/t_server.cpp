@@ -54,6 +54,7 @@ CvRect ROI_rect;
 vector<CvPoint>temp_center;
 vector<CvPoint> v_grap;
 vector<CvPoint> v_max;
+vector<int>rectempnum;
 
 CvPoint rec_max;
 
@@ -133,7 +134,7 @@ start:
 		if(check == 0){
 			temp_img = cvLoadImage(tempname , -1);
 			
-			cvShowImage("tempshow",temp_img);
+			//cvShowImage("tempshow",temp_img);
 			tempdata.push_back(temp_img);
 			roi_moment = cvCreateImage(cvGetSize(temp_img),IPL_DEPTH_8U,1);
 
@@ -211,6 +212,8 @@ start:
 						cout<<"Most sim temp = "<< no_sim + 1 <<endl;
 						//cout<<"Max = "<< max_temp[0] <<endl;
 
+						IplImage *recog_temp;
+
 						rec_max = cvPoint(maxLoc.x+ tempdata[no_sim]->width, maxLoc.y+tempdata[no_sim]->height);			
 						cvRectangle(showimg, maxLoc, rec_max, cvScalar(0,255,150),1,CV_AA,0);		
 						
@@ -219,9 +222,14 @@ start:
 
 						v_grap.push_back(grab_p);
 						v_max.push_back(maxLoc);
+						//rectempnum.push_back(no_sim);
 						
 						for(int j = 0 ; j < v_grap.size() ; j++){
+
 							cvCircle( showimg , v_grap[j] , 3, Scalar(0,0,255), 1);
+							cout<<"recog_temp"<<no_sim<<endl;
+							//cvShowImage("recog_temp" , tempdata[no_sim]);
+							//Sleep(500);
 						}
 					//}			
 				}
@@ -268,9 +276,6 @@ start:
 				}
 
 			}
-
-
-
 
 			v_grap.clear();
 		}
@@ -327,8 +332,8 @@ void on_mouse4(int event, int x,int y,int flags, void* param){
 		
         cvCopy(choose_temp,ROIImg);  
         cvResetImageROI(showimg);  
-        cvNamedWindow("ROI",1);  
-        cvShowImage("ROI",ROIImg);  
+        //cvNamedWindow("ROI",1);  
+        //cvShowImage("ROI",ROIImg);  
 
 		if(ROIImg != NULL){		
 			temp_num++;
@@ -345,8 +350,7 @@ void on_mouse4(int event, int x,int y,int flags, void* param){
 			cvResize(ROIImg, client_temp);
 			cvSaveImage(temp2,  client_temp);
 
-			cout<<"temp2.x"<<endl;
-
+			
 			cvReleaseImage(& ROIImg);
 
 			//cvWaitKey(20);
