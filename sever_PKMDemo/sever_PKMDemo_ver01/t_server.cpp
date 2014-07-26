@@ -74,8 +74,7 @@ float rw_y =  2.228;
 float rh_x = 0.773;
 float pre_bias;   //bias for moving direction
 
-int sc_rate = 3.4;
-
+int sc_rate = 2.8;
 ////********************Function****************************
 void on_mouse4(int event, int x,int y,int flags, void* param);
 CvPoint tracking_moment(IplImage* treatedimg , IplImage* result_img);
@@ -199,7 +198,7 @@ start:
 				cvMatchTemplate(showimg, tempdata[i] , dstimg, CV_TM_CCOEFF_NORMED);		
 				cvMinMaxLoc(dstimg, &min, &max, &mintemp, &maxtemp);
 
-				if(max > 0.67){
+				if(max > 0.7){
 
 					//max_temp[1] = max;			
 					//if(max_temp[1] >= max_temp[0]){
@@ -334,19 +333,17 @@ void on_mouse4(int event, int x,int y,int flags, void* param){
 		if(ROIImg != NULL){		
 			temp_num++;
 
-			
-
-			IplImage * client_temp = cvCreateImage(cvSize(ROIImg->width*sc_rate , ROIImg->height*sc_rate) , IPL_DEPTH_8U,3);
-
 			char temp[50];
 			char temp2[50] ;
+
+			IplImage * client_temp = cvCreateImage(cvSize(ROIImg->width*sc_rate , ROIImg->height*sc_rate) , IPL_DEPTH_8U,3);
 			cout<<"write file no. = "<<temp_num<<endl;
 			sprintf(temp, "C://temp_img/server/temp_%d.jpg",temp_num);
-			cvResize(ROIImg, client_temp);
-			sprintf(temp2, "C://temp_img/client/temp_%d.jpg",client_temp);
-
+			sprintf(temp2, "C://temp_img/client/temp_%d.jpg",temp_num);
 			cvSaveImage(temp,  ROIImg);
-			cvSaveImage(temp2,  ROIImg);
+
+			cvResize(ROIImg, client_temp);
+			cvSaveImage(temp2,  client_temp);
 
 			cout<<"temp2.x"<<endl;
 

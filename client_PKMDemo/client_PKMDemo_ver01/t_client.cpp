@@ -243,9 +243,9 @@ int main(){
 			}
 
 
-			if(max > 0.4 ){
+			if(max > 0.75 ){
 
-				cout<<"track start"<<endl;
+				cout<<"max ="<<max<<endl;
 
 			//////**************CamShift***************************************
 
