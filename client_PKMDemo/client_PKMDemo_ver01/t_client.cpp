@@ -1,6 +1,6 @@
 #include "pipe_client.h"
 #include"GrabImage.h"
-#include "RS323_COM.h"
+#include "RS323_COM.h" 
 
 #include <cv.h>  
 #include <cxcore.h>  
@@ -27,8 +27,8 @@ int img_width = 1280;
 int img_height = 720;
 int img_bpp = 24;
 
-int DST_IMG_WIDTH = 320;
-int DST_IMG_HEIGH = 180;
+int DST_IMG_WIDTH = 640;
+int DST_IMG_HEIGH = 360;
 
 int iLastX = -1; 
 int iLastY = -1;

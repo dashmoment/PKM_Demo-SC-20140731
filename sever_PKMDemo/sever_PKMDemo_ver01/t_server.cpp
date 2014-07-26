@@ -26,8 +26,8 @@ int img_height = 720;
 
 int img_bpp = 24;
 
-int DST_IMG_WIDTH = 320;
-int DST_IMG_HEIGH = 180;                           
+int DST_IMG_WIDTH = 640;
+int DST_IMG_HEIGH = 360;                           
 
 int iLastX = -1; 
 int iLastY = -1;
@@ -199,7 +199,7 @@ start:
 				cvMatchTemplate(showimg, tempdata[i] , dstimg, CV_TM_CCOEFF_NORMED);		
 				cvMinMaxLoc(dstimg, &min, &max, &mintemp, &maxtemp);
 
-				if(max > 0.7){
+				if(max > 0.8){
 
 					//max_temp[1] = max;			
 					//if(max_temp[1] >= max_temp[0]){
@@ -227,7 +227,7 @@ start:
 						for(int j = 0 ; j < v_grap.size() ; j++){
 
 							cvCircle( showimg , v_grap[j] , 3, Scalar(0,0,255), 1);
-							cout<<"recog_temp"<<no_sim<<endl;
+							cout<<"recog_temp = "<<no_sim<<endl;
 							//cvShowImage("recog_temp" , tempdata[no_sim]);
 							//Sleep(500);
 						}
