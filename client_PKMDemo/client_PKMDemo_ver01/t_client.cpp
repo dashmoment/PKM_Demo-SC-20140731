@@ -45,6 +45,9 @@ char GUIInput ;
 void rotateImage(IplImage* img, IplImage *img_rotate, int  degree);
 IplImage* temp_rot;
 
+IplImage * src_hsv;
+IplImage * src_hue;
+
 
 ////***************Track_init***************************
 
@@ -218,45 +221,63 @@ int main(){
 			
 				//cout<<"Access = "<<check<<endl; 
 
-				if(check == 0 ){
+				if(check == 0 &&  cam_itr%4 == 0){
 				
 		
 					tempdata = cvLoadImage(tempname , -1);
 					CvSize size_t = cvGetSize(tempdata);
-					cvShowImage("temp",tempdata);
+					//cvShowImage("temp",tempdata);
 				
 
 
 					roi_moment = cvCreateImage(size_t,IPL_DEPTH_8U,1);
-					cvCvtColor(tempdata, roi_moment, CV_RGB2GRAY);
-					temp_center = tracking_moment(roi_moment , tempdata);
+					//cvCvtColor(tempdata, roi_moment, CV_RGB2GRAY);
+					temp_center = tracking_moment(roi_moment , roi_moment);
 
 
 					size.width = DST_IMG_WIDTH - tempdata->width  + 1;      
 					size.height = DST_IMG_HEIGH - tempdata->height + 1;
 					dstimg = cvCreateImage(size, IPL_DEPTH_32F, 1);  	
 
-				for(int j = 0 ; j < 361 ; j = j+30){
+					
+
+				for(int j = 0 ; j < 361 ; j = j + 30){
+
+					//IplImage * temp_hsv = cvCreateImage(cvSize(tempdata->width , tempdata->height),tempdata->depth,tempdata->nChannels);
+					//IplImage * temp_hue = cvCreateImage(cvSize(tempdata->width , tempdata->height),tempdata->depth,1);
+					src_hsv =  cvCreateImage(cvSize(showimg->width , showimg->height),showimg->depth,showimg->nChannels);
+					src_hue =  cvCreateImage(cvSize(showimg->width , showimg->height),showimg->depth,1);
 
 					
+
 					temp_rot = cvCreateImage(cvSize(tempdata->width , tempdata->height),tempdata->depth,tempdata->nChannels);
 					rotateImage(tempdata , temp_rot , j);
-					
 
-					cvMatchTemplate(showimg, temp_rot , dstimg, CV_TM_CCOEFF_NORMED);	 //IplImage*	
+					cvCvtColor(showimg , src_hsv , CV_BGR2HSV );
+					cvSplit(src_hsv,0,0,src_hue,0);
+					//cvCvtColor(temp_rot , temp_hsv , CV_BGR2HSV );
+					//cvSplit(temp_hsv,temp_hue,0,0,0);
+					//cvShowImage("temp_hsv",temp_rot );
+					//cvShowImage("src_hsv",src_hue );
+					
+					
+					cvMatchTemplate(src_hue, temp_rot , dstimg, CV_TM_CCOEFF_NORMED);	 //IplImage*	
 					cvMinMaxLoc(dstimg, &min, &max, &mintemp, &maxtemp);
 
-					cout<<"max ="<<max<<endl;
-
+					cvReleaseImage(&src_hsv);
+					cvReleaseImage(&src_hue);
 					
-					if(max > 0.25){
+					//cvMatchTemplate(showimg, temp_rot , dstimg, CV_TM_CCOEFF_NORMED);	 //IplImage*	
+					//cvMinMaxLoc(dstimg, &min, &max, &mintemp, &maxtemp);
 
-						IplImage * roi_temp =cvCreateImage(cvGetSize(temp_rot),IPL_DEPTH_8U,1);
-						
+					//cout<<"max ="<<max<<endl;
+
+					//system("Pause");
+					if(max > 0.3){
+		
 						cout<<max<<endl;
+						IplImage * roi_temp =cvCreateImage(cvGetSize(temp_rot),IPL_DEPTH_8U,1);
 						cvShowImage("Rotate temp_client" , temp_rot);
-						cvCvtColor(temp_rot, roi_temp, CV_RGB2GRAY);
-						temp_center = tracking_moment(roi_temp,roi_temp);
 						cvReleaseImage(&temp_rot);
 						
 						break;
@@ -264,9 +285,9 @@ int main(){
 					
 				}
 
-			if(max > 0.25){
+			}
 
-				
+			if(max > 0.3){			
 
 			//////**************CamShift***************************************
 
@@ -275,8 +296,8 @@ int main(){
 					src2_hsv.create(src2.size() , src2.depth());
 					cvtColor(src2 , src2_hsv , CV_BGR2HSV );
 
-					int roi_x = maxtemp.x ;
-					int roi_y = maxtemp.y ;
+					int roi_x =  maxtemp.x;
+					int roi_y =  maxtemp.y ;
 					int roi_width = tempdata->width ;
 					int roi_height = tempdata->height;
 
@@ -291,18 +312,20 @@ int main(){
 					trackWindow.height = roi_height;
 					cam_idx = 1;
 
-					//circle( src2 , cvPoint(trackWindow.x ,trackWindow.y ), 3 , Scalar(0,150,255), 1);	
+					
 
 				
 				}
 
 					if(cam_idx == 1 && src2_hue.rows != 0 && trackWindow.width != 0){
 
-						if(cam_itr < 200){
-							Hist_and_Backproj(src2_hue);
-							RotatedRect trackBox = CamShift(backproj,trackWindow , TermCriteria( CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 5, 1 ));
-						
+						circle( src2 , maxtemp, 3 , Scalar(0,150,255), 1);	
+						circle( src2 , temp_center, 3 , Scalar(0,250,255), 1);
 
+						if(cam_itr < 50){
+							Hist_and_Backproj(src2_hue);
+
+							RotatedRect trackBox = CamShift(backproj,trackWindow , TermCriteria( CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 5, 1 ));
 							//cout<<trackBox.size<<endl;
 							trackBox.center.x= trackBox.center.x + maxtemp.x ;
 							trackBox.center.y = trackBox.center.y + maxtemp.y;
@@ -326,7 +349,7 @@ int main(){
 							
 						}
 
-						else if(cam_itr == 200){
+						else if(cam_itr == 50){
 						
 								cam_idx = 0;
 								cam_itr = 0;
@@ -360,7 +383,7 @@ int main(){
 					  }
 				}
 			 }
-			}
+			
 
 			//else{
 			//	string home_x = "0";

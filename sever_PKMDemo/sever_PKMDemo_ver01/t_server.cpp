@@ -80,7 +80,7 @@ float By = -360;
 
 float pre_bias;   //bias for moving direction
 
-int sc_rate = 4;
+int sc_rate = 3.5;
 ////********************Function****************************
 void on_mouse4(int event, int x,int y,int flags, void* param);
 CvPoint tracking_moment(IplImage* treatedimg , IplImage* result_img);
@@ -201,25 +201,25 @@ start:
 				size.height = DST_IMG_HEIGH - tempdata[i]->height + 1;
 				dstimg = cvCreateImage(size, IPL_DEPTH_32F, 1);  
 
-				for(int j = 0 ; j < 361 ; j = j+30){
+				for(int j = 0 ; j < 361 ; j =  j + 30){
 
 				
 					temp_rot = cvCreateImage(cvSize(tempdata[i]->width , tempdata[i]->height),tempdata[i]->depth,tempdata[i]->nChannels);
 					rotateImage(tempdata[i] , temp_rot , j);
-
 			
-					cout<<"angle = " << j <<endl;
+					//cout<<"angle = " << j <<endl;
 					
 					//Sleep(500);
 
 					cvMatchTemplate(showimg, temp_rot , dstimg, CV_TM_CCOEFF_NORMED);		
 					cvMinMaxLoc(dstimg, &min, &max, &mintemp, &maxtemp);
-					//cvReleaseImage(&temp_rot);
+					cvReleaseImage(&temp_rot);
 
-					cout<<max<<endl;
+					
 
 					if(max > 0.5){
-						cvShowImage("Rotate temp" , temp_rot);
+						cout<<"max = "<<max<<endl;
+						//cvShowImage("Rotate temp" , temp_rot);
 						//max_temp[1] = max;			
 						//if(max_temp[1] >= max_temp[0]){
 
@@ -231,7 +231,7 @@ start:
 							cout<<"Most sim temp = "<< no_sim + 1 <<endl;
 							//cout<<"Max = "<< max_temp[0] <<endl;
 
-							IplImage *recog_temp;
+							
 
 							rec_max = cvPoint(maxLoc.x+ tempdata[no_sim]->width, maxLoc.y+tempdata[no_sim]->height);			
 							cvRectangle(showimg, maxLoc, rec_max, cvScalar(0,255,150),1,CV_AA,0);		
@@ -242,7 +242,6 @@ start:
 							v_grap.push_back(grab_p);
 							v_max.push_back(maxLoc);
 							//rectempnum.push_back(no_sim);
-							cout<<"recog_temp"<<no_sim<<endl;
 							cvReleaseImage(&temp_rot);
 							break;
 						//}			
@@ -368,14 +367,25 @@ void on_mouse4(int event, int x,int y,int flags, void* param){
 			char temp[50];
 			char temp2[50] ;
 
-			IplImage * client_temp = cvCreateImage(cvSize(ROIImg->width*sc_rate , ROIImg->height*sc_rate) , IPL_DEPTH_8U,3);
+			IplImage * client_temp = cvCreateImage(cvSize(ROIImg->width*sc_rate , ROIImg->height*sc_rate) , ROIImg->depth,ROIImg->nChannels);
+			IplImage * hue_temp = cvCreateImage(cvSize(ROIImg->width*sc_rate , ROIImg->height*sc_rate) , ROIImg->depth,1);
 			cout<<"write file no. = "<<temp_num<<endl;
 			sprintf(temp, "C://temp_img/server/temp_%d.jpg",temp_num);
 			sprintf(temp2, "C://temp_img/client/temp_%d.jpg",temp_num);
 			cvSaveImage(temp,  ROIImg);
 
-			cvResize(ROIImg, client_temp);
-			cvSaveImage(temp2,  client_temp);
+
+			IplImage * temp_hsv = cvCreateImage(cvSize(ROIImg->width , ROIImg->height),ROIImg->depth,ROIImg->nChannels);
+			IplImage * temp_hue = cvCreateImage(cvSize(ROIImg->width , ROIImg->height),ROIImg->depth,1);
+
+			cvCvtColor(ROIImg , temp_hsv , CV_BGR2HSV );
+			cvSplit(temp_hsv,0,0,temp_hue,0);
+			//cvShowImage("temp_hsv",temp_rot );
+
+			cvResize(temp_hue, hue_temp,INTER_LANCZOS4 );
+			cvSaveImage(temp2,  hue_temp);
+
+			
 
 			
 			cvReleaseImage(& ROIImg);
