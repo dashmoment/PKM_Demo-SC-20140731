@@ -223,17 +223,21 @@ start:
 						v_grap.push_back(grab_p);
 						v_max.push_back(maxLoc);
 						//rectempnum.push_back(no_sim);
+						cout<<"recog_temp"<<no_sim<<endl;
 						
-						for(int j = 0 ; j < v_grap.size() ; j++){
-
-							cvCircle( showimg , v_grap[j] , 3, Scalar(0,0,255), 1);
-							cout<<"recog_temp"<<no_sim<<endl;
-							//cvShowImage("recog_temp" , tempdata[no_sim]);
-							//Sleep(500);
-						}
 					//}			
 				}
 
+			}
+
+			if(v_grap.size() != 0){
+
+				for(int j = 0 ; j < v_grap.size() ; j++){
+
+					cvCircle( showimg , v_grap[j] , 3, Scalar(0,0,255), 1);
+							
+							
+				}
 			}
 			 
 			cout<<"Recognized stage clear"<<endl;
