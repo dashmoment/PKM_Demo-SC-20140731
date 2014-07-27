@@ -1,4 +1,4 @@
-#include "pipe_server.h"
+﻿#include "pipe_server.h"
 #include "RS323_COM.h"
 #include"GrabImage.h"
 
@@ -65,17 +65,22 @@ bool check_line_state=false;
 
 int temp_num;
 
+
+////*******************Rotate Temp****************
+
+void rotateImage(IplImage* img, IplImage *img_rotate, int  degree);
+IplImage* temp_rot;
+
 //******************Img2global param*****************
 
-float Ax =  2.156;
-float Bx = - 191.661;
-float Ay = 1;
-float By = -165.596;
-float rw_y =  2.228;
-float rh_x = 0.773;
+float Ax =  0.385;
+float Bx = - 640;
+float Ay = -0.385;
+float By = -360;
+
 float pre_bias;   //bias for moving direction
 
-int sc_rate = 2.8;
+int sc_rate = 4;
 ////********************Function****************************
 void on_mouse4(int event, int x,int y,int flags, void* param);
 CvPoint tracking_moment(IplImage* treatedimg , IplImage* result_img);
@@ -100,7 +105,7 @@ int main(){
 	hCam = grab->InitCam(pMemVoid , hCam , img_width , img_height , img_bpp);
 	
     cvNamedWindow( "Grabimage_server", 0);
-	cvvResizeWindow("Grabimage_server", 640 , 360);
+	cvvResizeWindow("Grabimage_server", 320 , 180);
 
 	//com->init_port();
 
@@ -194,38 +199,56 @@ start:
 
 				size.width = DST_IMG_WIDTH - tempdata[i]->width  + 1;      
 				size.height = DST_IMG_HEIGH - tempdata[i]->height + 1;
-				dstimg = cvCreateImage(size, IPL_DEPTH_32F, 1);  	
+				dstimg = cvCreateImage(size, IPL_DEPTH_32F, 1);  
 
-				cvMatchTemplate(showimg, tempdata[i] , dstimg, CV_TM_CCOEFF_NORMED);		
-				cvMinMaxLoc(dstimg, &min, &max, &mintemp, &maxtemp);
+				for(int j = 0 ; j < 361 ; j = j+30){
 
-				if(max > 0.7){
+				
+					temp_rot = cvCreateImage(cvSize(tempdata[i]->width , tempdata[i]->height),tempdata[i]->depth,tempdata[i]->nChannels);
+					rotateImage(tempdata[i] , temp_rot , j);
 
-					//max_temp[1] = max;			
-					//if(max_temp[1] >= max_temp[0]){
+			
+					cout<<"angle = " << j <<endl;
+					
+					//Sleep(500);
 
-						//max_temp[0] = max_temp[1];
-						minLoc = mintemp;
-						maxLoc = maxtemp;
-						no_sim = i;
+					cvMatchTemplate(showimg, temp_rot , dstimg, CV_TM_CCOEFF_NORMED);		
+					cvMinMaxLoc(dstimg, &min, &max, &mintemp, &maxtemp);
+					//cvReleaseImage(&temp_rot);
 
-						cout<<"Most sim temp = "<< no_sim + 1 <<endl;
-						//cout<<"Max = "<< max_temp[0] <<endl;
+					cout<<max<<endl;
 
-						IplImage *recog_temp;
+					if(max > 0.5){
+						cvShowImage("Rotate temp" , temp_rot);
+						//max_temp[1] = max;			
+						//if(max_temp[1] >= max_temp[0]){
 
-						rec_max = cvPoint(maxLoc.x+ tempdata[no_sim]->width, maxLoc.y+tempdata[no_sim]->height);			
-						cvRectangle(showimg, maxLoc, rec_max, cvScalar(0,255,150),1,CV_AA,0);		
+							//max_temp[0] = max_temp[1];
+							minLoc = mintemp;
+							maxLoc = maxtemp;
+							no_sim = i;
+
+							cout<<"Most sim temp = "<< no_sim + 1 <<endl;
+							//cout<<"Max = "<< max_temp[0] <<endl;
+
+							IplImage *recog_temp;
+
+							rec_max = cvPoint(maxLoc.x+ tempdata[no_sim]->width, maxLoc.y+tempdata[no_sim]->height);			
+							cvRectangle(showimg, maxLoc, rec_max, cvScalar(0,255,150),1,CV_AA,0);		
 						
-						grab_p.x = temp_center[no_sim].x + maxLoc.x;
-						grab_p.y = temp_center[no_sim].y + maxLoc.y;
+							grab_p.x = temp_center[no_sim].x + maxLoc.x;
+							grab_p.y = temp_center[no_sim].y + maxLoc.y;
 
-						v_grap.push_back(grab_p);
-						v_max.push_back(maxLoc);
-						//rectempnum.push_back(no_sim);
-						cout<<"recog_temp"<<no_sim<<endl;
-						
-					//}			
+							v_grap.push_back(grab_p);
+							v_max.push_back(maxLoc);
+							//rectempnum.push_back(no_sim);
+							cout<<"recog_temp"<<no_sim<<endl;
+							cvReleaseImage(&temp_rot);
+							break;
+						//}			
+					}
+
+					
 				}
 
 			}
@@ -246,13 +269,13 @@ start:
 
 			
 				char pre_x[10];
-				sprintf(pre_x, "%.3f", tran_2GX(v_grap[0].y));
+				sprintf(pre_x, "%.3f", tran_2GX(v_grap[0].x));
 				ps->send_msg(pre_x);
 
 				Sleep(50);
 
 				char pre_y[10];
-				sprintf(pre_y, "%.3f", tran_2GY(v_grap[0].x));
+				sprintf(pre_y, "%.3f", tran_2GY(v_grap[0].y));
 				ps->send_msg(pre_y);
 
 				char temp_id[10];
@@ -385,17 +408,19 @@ CvPoint tracking_moment(IplImage* treatedimg , IplImage* result_img){
 
 
 
-float tran_2GX(int img_y){
+float tran_2GX(int img_x){
 
-	float gx = Ax*rh_x*img_y + Bx;
+	float gx = Ax*(4*img_x  + Bx);
 	cout<<"gx ="<<gx<<endl;
+	cout<<"px ="<<img_x<<endl;
 	return gx;
 }
 
-float tran_2GY(int img_x){
+float tran_2GY(int img_y){
 	
-	float gy = Ay*rw_y*img_x + By ;
+	float gy = Ay*(4*img_y + By) ;
 	cout<<"gy ="<<gy<<endl;
+	cout<<"py ="<<img_y<<endl;
 	return gy;
 
 }
@@ -414,3 +439,17 @@ string pre_fetch(CvPoint es_g){
 
 	
 }
+
+void rotateImage(IplImage* img, IplImage *img_rotate,int degree)  
+{  
+    
+    CvPoint2D32f center;    
+    center.x=float (img->width/2.0 + 1);  
+    center.y=float (img->height/2.0 + 1);  
+   
+    float m[6];              
+    CvMat M = cvMat( 2, 3, CV_32F, m );  
+    cv2DRotationMatrix( center, degree,1, &M);  
+   
+    cvWarpAffine(img,img_rotate, &M,CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS,cvScalarAll(0) );  
+}  

@@ -40,6 +40,11 @@ IplImage * showimg = cvCreateImage(cvSize(DST_IMG_WIDTH, DST_IMG_HEIGH), IPL_DEP
 Mat grabimage;
 char GUIInput ;
 
+////*******************Rotate Temp****************
+
+void rotateImage(IplImage* img, IplImage *img_rotate, int  degree);
+IplImage* temp_rot;
+
 
 ////***************Track_init***************************
 
@@ -119,7 +124,7 @@ int main(){
 	hCam = grab->InitCam(pMemVoid , hCam , img_width , img_height , img_bpp);
 	
 	cvNamedWindow( "Grabimage_client", 0);
-	cvResizeWindow("Grabimage_client", 640 , 360);
+	cvResizeWindow("Grabimage_client", 320 , 180);
 
 	 
 	int response;
@@ -211,7 +216,7 @@ int main(){
 				int check = _access(tempname, 0);
 
 			
-				cout<<"Access = "<<check<<endl; 
+				//cout<<"Access = "<<check<<endl; 
 
 				if(check == 0 ){
 				
@@ -231,21 +236,37 @@ int main(){
 					size.height = DST_IMG_HEIGH - tempdata->height + 1;
 					dstimg = cvCreateImage(size, IPL_DEPTH_32F, 1);  	
 
+				for(int j = 0 ; j < 361 ; j = j+30){
 
-		
+					
+					temp_rot = cvCreateImage(cvSize(tempdata->width , tempdata->height),tempdata->depth,tempdata->nChannels);
+					rotateImage(tempdata , temp_rot , j);
+					
 
-					cvMatchTemplate(showimg, tempdata , dstimg, CV_TM_CCOEFF_NORMED);	 //IplImage*	
+					cvMatchTemplate(showimg, temp_rot , dstimg, CV_TM_CCOEFF_NORMED);	 //IplImage*	
 					cvMinMaxLoc(dstimg, &min, &max, &mintemp, &maxtemp);
 
-			
-				cout<<"max = "<<max<<endl;
+					cout<<"max ="<<max<<endl;
 
-			}
+					
+					if(max > 0.25){
 
+						IplImage * roi_temp =cvCreateImage(cvGetSize(temp_rot),IPL_DEPTH_8U,1);
+						
+						cout<<max<<endl;
+						cvShowImage("Rotate temp_client" , temp_rot);
+						cvCvtColor(temp_rot, roi_temp, CV_RGB2GRAY);
+						temp_center = tracking_moment(roi_temp,roi_temp);
+						cvReleaseImage(&temp_rot);
+						
+						break;
+					}
+					
+				}
 
-			if(max > 0.75 ){
+			if(max > 0.25){
 
-				cout<<"max ="<<max<<endl;
+				
 
 			//////**************CamShift***************************************
 
@@ -338,6 +359,7 @@ int main(){
 							
 					  }
 				}
+			 }
 			}
 
 			//else{
@@ -411,18 +433,34 @@ CvPoint tracking_moment(IplImage* treatedimg , IplImage* result_img){
      return center;
 }
 
-float tran_2GX(int img_y){
+float tran_2GX(int img_x){
 
-	float gx = Ax*rh_x*img_y + Bx;
+	float gx = Ax*(4*img_x  + Bx);
 	cout<<"gx ="<<gx<<endl;
+	cout<<"px ="<<img_x<<endl;
 	return gx;
 }
 
-float tran_2GY(int img_x){
+float tran_2GY(int img_y){
 	
-	float gy = Ay*rw_y*img_x + By ;
+	float gy = Ay*(4*img_y + By) ;
 	cout<<"gy ="<<gy<<endl;
+	cout<<"py ="<<img_y<<endl;
 	return gy;
 
 }
 
+
+void rotateImage(IplImage* img, IplImage *img_rotate,int degree)  
+{  
+    
+    CvPoint2D32f center;    
+    center.x=float (img->width/2.0 + 1);  
+    center.y=float (img->height/2.0 + 1);  
+   
+    float m[6];              
+    CvMat M = cvMat( 2, 3, CV_32F, m );  
+    cv2DRotationMatrix( center, degree,1, &M);  
+   
+    cvWarpAffine(img,img_rotate, &M,CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS,cvScalarAll(0) );  
+}  
