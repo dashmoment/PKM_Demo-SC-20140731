@@ -80,7 +80,8 @@ float By = -360;
 
 float pre_bias;   //bias for moving direction
 
-int sc_rate = 3.5;
+float sc_rate = 3.5;
+float down_sample = 4; 
 ////********************Function****************************
 void on_mouse4(int event, int x,int y,int flags, void* param);
 CvPoint tracking_moment(IplImage* treatedimg , IplImage* result_img);
@@ -422,7 +423,7 @@ CvPoint tracking_moment(IplImage* treatedimg , IplImage* result_img){
 
 float tran_2GX(int img_x){
 
-	float gx = Ax*(4*img_x  + Bx);
+	float gx = Ax*(down_sample*img_x  + Bx);
 	cout<<"gx ="<<gx<<endl;
 	cout<<"px ="<<img_x<<endl;
 	return gx;
@@ -430,7 +431,7 @@ float tran_2GX(int img_x){
 
 float tran_2GY(int img_y){
 	
-	float gy = Ay*(4*img_y + By) ;
+	float gy = Ay*(down_sample*img_y + By) ;
 	cout<<"gy ="<<gy<<endl;
 	cout<<"py ="<<img_y<<endl;
 	return gy;

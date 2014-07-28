@@ -210,179 +210,179 @@ int main(){
 				////***********input temp**************(Id: check)
 
 			
-				char tempname[50];
-				sprintf(tempname,"C://temp_img/client/temp_%d.jpg",temp_id);
+			//	char tempname[50];
+			//	sprintf(tempname,"C://temp_img/client/temp_%d.jpg",temp_id);
 
-				//cout<<"temp_id = " <<temp_id<<endl;		
-				//cout<<tempname<<endl;
+			//	//cout<<"temp_id = " <<temp_id<<endl;		
+			//	//cout<<tempname<<endl;
 
-				int check = _access(tempname, 0);
+			//	int check = _access(tempname, 0);
 
-			
-				//cout<<"Access = "<<check<<endl; 
+			//
+			//	//cout<<"Access = "<<check<<endl; 
 
-				if(check == 0 &&  cam_itr%4 == 0){
-				
+			//	if(check == 0 &&  cam_itr%4 == 0){
+			//	
 		
-					tempdata = cvLoadImage(tempname , -1);
-					CvSize size_t = cvGetSize(tempdata);
-					//cvShowImage("temp",tempdata);
-				
+			//		tempdata = cvLoadImage(tempname , -1);
+			//		CvSize size_t = cvGetSize(tempdata);
+			//		//cvShowImage("temp",tempdata);
+			//	
 
 
-					roi_moment = cvCreateImage(size_t,IPL_DEPTH_8U,1);
-					//cvCvtColor(tempdata, roi_moment, CV_RGB2GRAY);
-					temp_center = tracking_moment(roi_moment , roi_moment);
+			//		roi_moment = cvCreateImage(size_t,IPL_DEPTH_8U,1);
+			//		//cvCvtColor(tempdata, roi_moment, CV_RGB2GRAY);
+			//		temp_center = tracking_moment(roi_moment , roi_moment);
 
 
-					size.width = DST_IMG_WIDTH - tempdata->width  + 1;      
-					size.height = DST_IMG_HEIGH - tempdata->height + 1;
-					dstimg = cvCreateImage(size, IPL_DEPTH_32F, 1);  	
+			//		size.width = DST_IMG_WIDTH - tempdata->width  + 1;      
+			//		size.height = DST_IMG_HEIGH - tempdata->height + 1;
+			//		dstimg = cvCreateImage(size, IPL_DEPTH_32F, 1);  	
 
-					
+			//		
 
-				for(int j = 0 ; j < 361 ; j = j + 30){
+			//	for(int j = 0 ; j < 361 ; j = j + 30){
 
-					//IplImage * temp_hsv = cvCreateImage(cvSize(tempdata->width , tempdata->height),tempdata->depth,tempdata->nChannels);
-					//IplImage * temp_hue = cvCreateImage(cvSize(tempdata->width , tempdata->height),tempdata->depth,1);
-					src_hsv =  cvCreateImage(cvSize(showimg->width , showimg->height),showimg->depth,showimg->nChannels);
-					src_hue =  cvCreateImage(cvSize(showimg->width , showimg->height),showimg->depth,1);
+			//		//IplImage * temp_hsv = cvCreateImage(cvSize(tempdata->width , tempdata->height),tempdata->depth,tempdata->nChannels);
+			//		//IplImage * temp_hue = cvCreateImage(cvSize(tempdata->width , tempdata->height),tempdata->depth,1);
+			//		src_hsv =  cvCreateImage(cvSize(showimg->width , showimg->height),showimg->depth,showimg->nChannels);
+			//		src_hue =  cvCreateImage(cvSize(showimg->width , showimg->height),showimg->depth,1);
 
-					
+			//		
 
-					temp_rot = cvCreateImage(cvSize(tempdata->width , tempdata->height),tempdata->depth,tempdata->nChannels);
-					rotateImage(tempdata , temp_rot , j);
+			//		temp_rot = cvCreateImage(cvSize(tempdata->width , tempdata->height),tempdata->depth,tempdata->nChannels);
+			//		rotateImage(tempdata , temp_rot , j);
 
-					cvCvtColor(showimg , src_hsv , CV_BGR2HSV );
-					cvSplit(src_hsv,0,0,src_hue,0);
-					//cvCvtColor(temp_rot , temp_hsv , CV_BGR2HSV );
-					//cvSplit(temp_hsv,temp_hue,0,0,0);
-					//cvShowImage("temp_hsv",temp_rot );
-					//cvShowImage("src_hsv",src_hue );
-					
-					
-					cvMatchTemplate(src_hue, temp_rot , dstimg, CV_TM_CCOEFF_NORMED);	 //IplImage*	
-					cvMinMaxLoc(dstimg, &min, &max, &mintemp, &maxtemp);
+			//		cvCvtColor(showimg , src_hsv , CV_BGR2HSV );
+			//		cvSplit(src_hsv,0,0,src_hue,0);
+			//		//cvCvtColor(temp_rot , temp_hsv , CV_BGR2HSV );
+			//		//cvSplit(temp_hsv,temp_hue,0,0,0);
+			//		//cvShowImage("temp_hsv",temp_rot );
+			//		//cvShowImage("src_hsv",src_hue );
+			//		
+			//		
+			//		cvMatchTemplate(src_hue, temp_rot , dstimg, CV_TM_CCOEFF_NORMED);	 //IplImage*	
+			//		cvMinMaxLoc(dstimg, &min, &max, &mintemp, &maxtemp);
 
-					cvReleaseImage(&src_hsv);
-					cvReleaseImage(&src_hue);
-					
-					//cvMatchTemplate(showimg, temp_rot , dstimg, CV_TM_CCOEFF_NORMED);	 //IplImage*	
-					//cvMinMaxLoc(dstimg, &min, &max, &mintemp, &maxtemp);
+			//		cvReleaseImage(&src_hsv);
+			//		cvReleaseImage(&src_hue);
+			//		
+			//		//cvMatchTemplate(showimg, temp_rot , dstimg, CV_TM_CCOEFF_NORMED);	 //IplImage*	
+			//		//cvMinMaxLoc(dstimg, &min, &max, &mintemp, &maxtemp);
 
-					//cout<<"max ="<<max<<endl;
+			//		//cout<<"max ="<<max<<endl;
 
-					//system("Pause");
-					if(max > 0.3){
+			//		//system("Pause");
+			//		if(max > 0.3){
 		
-						cout<<max<<endl;
-						IplImage * roi_temp =cvCreateImage(cvGetSize(temp_rot),IPL_DEPTH_8U,1);
-						cvShowImage("Rotate temp_client" , temp_rot);
-						cvReleaseImage(&temp_rot);
-						
-						break;
-					}
-					
-				}
+			//			cout<<max<<endl;
+			//			IplImage * roi_temp =cvCreateImage(cvGetSize(temp_rot),IPL_DEPTH_8U,1);
+			//			cvShowImage("Rotate temp_client" , temp_rot);
+			//			cvReleaseImage(&temp_rot);
+			//			
+			//			break;
+			//		}
+			//		
+			//	}
 
-			}
+			//}
 
-			if(max > 0.3){			
+			//if(max > 0.3){			
 
-			//////**************CamShift***************************************
-
-
-				if(cam_idx == 0){
-					src2_hsv.create(src2.size() , src2.depth());
-					cvtColor(src2 , src2_hsv , CV_BGR2HSV );
-
-					int roi_x =  maxtemp.x;
-					int roi_y =  maxtemp.y ;
-					int roi_width = tempdata->width ;
-					int roi_height = tempdata->height;
-
-					src2_hsv = src2_hsv(Rect(roi_x , roi_y , roi_width , roi_height));
-					src2_hue.create(src2_hsv.size(), src2_hsv.depth());
-					int ch[] = { 0, 0 };
-					mixChannels( &src2_hsv, 1, &src2_hue, 1, ch, 1 );
-
-					trackWindow.x =  roi_x ;
-					trackWindow.y =  roi_y ;
-					trackWindow.width = roi_width;
-					trackWindow.height = roi_height;
-					cam_idx = 1;
-
-					
-
-				
-				}
-
-					if(cam_idx == 1 && src2_hue.rows != 0 && trackWindow.width != 0){
-
-						circle( src2 , maxtemp, 3 , Scalar(0,150,255), 1);	
-						circle( src2 , temp_center, 3 , Scalar(0,250,255), 1);
-
-						if(cam_itr < 50){
-							Hist_and_Backproj(src2_hue);
-
-							RotatedRect trackBox = CamShift(backproj,trackWindow , TermCriteria( CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 5, 1 ));
-							//cout<<trackBox.size<<endl;
-							trackBox.center.x= trackBox.center.x + maxtemp.x ;
-							trackBox.center.y = trackBox.center.y + maxtemp.y;
-
-							final_grap = cvPoint(trackBox.center.x , trackBox.center.y);
-
-							if(trackBox.size.width > 0 && trackBox.size.height > 0){
-								circle( src2 ,trackBox.center , 1, Scalar(0,0,255), 1);
-								ellipse( src2 , trackBox, Scalar(0,0,255), 1, CV_AA );
-							}
-
-							cam_itr++;
-							cout<<"cam_itr = "<<cam_itr<<endl;
-
-							char pre_x[] = "1";
-							pc->send_msg(pre_x);
-								
-							goto track;
-
-						
-							
-						}
-
-						else if(cam_itr == 50){
-						
-								cam_idx = 0;
-								cam_itr = 0;
-								recv_data = NULL;
-
-								////trans final pose
-
-								float final_gx;
-								float final_gy;
-
-								final_gx = tran_2GX(final_grap.y);
-								final_gy = tran_2GY(final_grap.x);
+			////////**************CamShift***************************************
 
 
-								char final_x[10] = "";
-								sprintf(final_x,"%.3f",final_gx);
-								char final_y[10] = "";
-								sprintf(final_y,"%.3f",final_gy);
-							
-						 
-								write_com = send_x + final_x + send_y + final_y + send_z + call_prog;
-								//com->write_port(write_com);
+			//	if(cam_idx == 0){
+			//		src2_hsv.create(src2.size() , src2.depth());
+			//		cvtColor(src2 , src2_hsv , CV_BGR2HSV );
 
-								////send finished to server from named pipe
-								//char pre_x[] = "0";
-								//ps->send_msg(pre_x);   ////1st sender.
+			//		int roi_x =  maxtemp.x;
+			//		int roi_y =  maxtemp.y ;
+			//		int roi_width = tempdata->width ;
+			//		int roi_height = tempdata->height;
 
-								response_idx = 0;
-								cout<<"track sucess + finished"<<endl;
-							
-					  }
-				}
-			 }
+			//		src2_hsv = src2_hsv(Rect(roi_x , roi_y , roi_width , roi_height));
+			//		src2_hue.create(src2_hsv.size(), src2_hsv.depth());
+			//		int ch[] = { 0, 0 };
+			//		mixChannels( &src2_hsv, 1, &src2_hue, 1, ch, 1 );
+
+			//		trackWindow.x =  roi_x ;
+			//		trackWindow.y =  roi_y ;
+			//		trackWindow.width = roi_width;
+			//		trackWindow.height = roi_height;
+			//		cam_idx = 1;
+
+			//		
+
+			//	
+			//	}
+
+			//		if(cam_idx == 1 && src2_hue.rows != 0 && trackWindow.width != 0){
+
+			//			circle( src2 , maxtemp, 3 , Scalar(0,150,255), 1);	
+			//			circle( src2 , temp_center, 3 , Scalar(0,250,255), 1);
+
+			//			if(cam_itr < 50){
+			//				Hist_and_Backproj(src2_hue);
+
+			//				RotatedRect trackBox = CamShift(backproj,trackWindow , TermCriteria( CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 5, 1 ));
+			//				//cout<<trackBox.size<<endl;
+			//				trackBox.center.x= trackBox.center.x + maxtemp.x ;
+			//				trackBox.center.y = trackBox.center.y + maxtemp.y;
+
+			//				final_grap = cvPoint(trackBox.center.x , trackBox.center.y);
+
+			//				if(trackBox.size.width > 0 && trackBox.size.height > 0){
+			//					circle( src2 ,trackBox.center , 1, Scalar(0,0,255), 1);
+			//					ellipse( src2 , trackBox, Scalar(0,0,255), 1, CV_AA );
+			//				}
+
+			//				cam_itr++;
+			//				cout<<"cam_itr = "<<cam_itr<<endl;
+
+			//				char pre_x[] = "1";
+			//				pc->send_msg(pre_x);
+			//					
+			//				goto track;
+
+			//			
+			//				
+			//			}
+
+			//			else if(cam_itr == 50){
+			//			
+			//					cam_idx = 0;
+			//					cam_itr = 0;
+			//					recv_data = NULL;
+
+			//					////trans final pose
+
+			//					float final_gx;
+			//					float final_gy;
+
+			//					final_gx = tran_2GX(final_grap.y);
+			//					final_gy = tran_2GY(final_grap.x);
+
+
+			//					char final_x[10] = "";
+			//					sprintf(final_x,"%.3f",final_gx);
+			//					char final_y[10] = "";
+			//					sprintf(final_y,"%.3f",final_gy);
+			//				
+			//			 
+			//					write_com = send_x + final_x + send_y + final_y + send_z + call_prog;
+			//					//com->write_port(write_com);
+
+			//					////send finished to server from named pipe
+			//					//char pre_x[] = "0";
+			//					//ps->send_msg(pre_x);   ////1st sender.
+
+			//					response_idx = 0;
+			//					cout<<"track sucess + finished"<<endl;
+			//				
+			//		  }
+			//	}
+			//}
 			
 
 			//else{
