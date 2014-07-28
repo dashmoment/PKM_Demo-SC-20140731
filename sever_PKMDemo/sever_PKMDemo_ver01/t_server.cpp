@@ -73,9 +73,9 @@ IplImage* temp_rot;
 
 //******************Img2global param*****************
 
-float Ax =  0.385;
+float Ax =  0.33;
 float Bx = - 640;
-float Ay = -0.385;
+float Ay = -0.33;
 float By = -360;
 
 float pre_bias;   //bias for moving direction
@@ -269,12 +269,14 @@ start:
 			
 				char pre_x[10];
 				sprintf(pre_x, "%.3f", tran_2GX(v_grap[0].x));
+				cout<<"sc_x = "<<v_grap[0].x<<endl;
 				ps->send_msg(pre_x);
 
 				Sleep(50);
 
 				char pre_y[10];
 				sprintf(pre_y, "%.3f", tran_2GY(v_grap[0].y));
+				cout<<"sc_xy = "<<v_grap[0].y<<endl;
 				ps->send_msg(pre_y);
 
 				char temp_id[10];
