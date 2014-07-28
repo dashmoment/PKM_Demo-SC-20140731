@@ -1,0 +1,160 @@
+OPEN PROG 41 CLEAR
+
+; /////////////////////////////////////////////////////
+;          Inverse Kinematics for Delta Robot
+; /////////////////////////////////////////////////////
+
+; ============== Variable Table =========================
+;
+; P197	End effector center X coordinate 
+; P198	End effector center Y coordinate
+; P193	End effector center Z coordinate
+;
+; P3	Callibrated End effector center X coordinate 
+; P97	Callibrated End effector center Y coordinate 
+; P96	Callibrated End effector center Z coordinate 
+; P98	Equilateral plane to world coordinate tilt angle
+;
+; P1	End effector adjusted X coordinate
+; P2	End effector adjusted Y coordinate
+; 
+; P4, P5, P6, P7, P8, P9	Fixed common hardware parameters
+; P4	f, base edge length
+; P5	e, end-effector edge length`
+; P6	rf, upper arm length
+; P7	re, lower arm length
+;
+; P10, P11, P12, P13		First encoder fixed parameters
+; P14, P15, P16, P17 		Second encoder fixed parameters
+; P18, P19, P20, P21	 	Third encoder fixed parameters
+; P22 ~ P25			End Effector fixed parameters
+; P2001, P27 ~ P30			First encoder IK
+; P31 ~ P34			Second encoder IK
+; P35 ~ P40			Third encoder IK
+;
+; P41	Theta 1 (First encoder)
+; P42	Theta 2	(Second Encoder)
+; P43	Theta 3 (Third encoder)
+;
+; ============== What the program does ========================
+;
+; The inputs of this program are the Cartesian coordinates given
+; by the user. After solving the inverse kinematics for each arm
+; of the delta robot, the program outputs corresponding angles for
+; each encoder (motor). The final part of the program drives the
+; motor toward the given Cartesian coordinates with the corresponding
+; theta angles.
+;
+; The program is adjusted according to actual measurements so to 
+; reduce the errors during motion to a deviation within 1 cm range.
+; ==============================================================
+;
+; ================== TARGET DESTINATION =========================
+; PLEASE INSERT YOUR DESIRED TARGET COORDINATE BELOW
+      P197= 30			; E_x
+      P196= 30 			; E_y
+      P193= -259.3		; E_z
+;
+; ================================================================
+;
+; Adjusting The end-effector's coordinate. The further the end-effector
+; goes, the greater the error. 
+; But the deviation does not impose serious issue with the contest's 
+; requirements by now :P 
+;
+; #1 Parameters
+      P97=P197*7.15/10		; x
+      P96=P196*7.7/10		; y
+      P3=P193*10.7/10		; z
+	  
+      P98=-2			; degree
+	  
+      P1=P97*COS(P98)+P96*SIN(P98)
+      P2=-1*P97*SIN(P98)+P96*COS(P98)
+
+      P4=120.1				; f
+      P5=36.315				; e
+      P6=170				; rf
+      P7=376				; re
+	  
+; #2 Parameters	  
+      P8=0
+      P9=-P4
+      P10=0
+      P11=SQRT(3)/2*P4
+      P12=P4/2
+	  
+      P13=0
+      P14=-SQRT(3)/2*P4
+      P15=P4/2
+	  
+      P16=0
+      P17=P1
+      P18=P2-P5
+	  
+      P19=P3
+      P20=P1+SQRT(3)/2*P5
+      P21=P2+P5/2
+	  
+      P22=P3
+      P23=P1-SQRT(3)/2*P5
+      P24=P2+P5/2
+      P25=P3
+
+; ////////////////////////////////
+;       Inverse Kinematics
+; ///////////////////////////////
+      P2001=(-1*(P8*P8)/P9+P17*P8/P9-P9+P18)/(P10-P19)
+      P27=(P8*P8-P17*P17+P9*P9-P18*P18+P10*P10-P19*P19-P6*P6+P7*P7)/(2*(P10-P19))
+      P28=((P8*P8/P9+P9+P2001*P10-P2001*P27)-SQRT((P8*P8/P9+P9-P2001*P27+P2001*P10)*(P8*P8/P9+P9-P2001*P27+P2001*P10)-(P8*P8/(P9*P9)+1+P2001*P2001)*(P8*P8+P9*P9+P27*P27-2*P27*P10+P10*P10-P6*P6)))/(P8*P8/(P9*P9)+1+P2001*P2001)
+      P29=(P2001*P28+P27)
+      P30=P8/P9*P28
+      P31=(-1*(P11*P11)/P12+P20*P11/P12-P12+P21)/(P13-P22)
+      P32=(P11*P11-P20*P20+P12*P12-P21*P21+P13*P13-P22*P22-P6*P6+P7*P7)/(2*(P13-P22))
+      P33=((P11*P11/P12+P12+P31*P13-P31*P32)+SQRT((P11*P11/P12+P12-P31*P32+P31*P13)*(P11*P11/P12+P12-P31*P32+P31*P13)-(P11*P11/(P12*P12)+1+P31*P31)*(P11*P11+P12*P12+P32*P32-2*P32*P13+P13*P13-P6*P6)))/(P11*P11/(P12*P12)+1+P31*P31)
+      P34=(P31*P33+P32)
+      P35=P11/P12*P33
+      P36=(-1*(P14*P14)/P15+P23*P14/P15-P15+P24)/(P16-P25)
+      P37=(P14*P14-P23*P23+P15*P15-P24*P24+P16*P16-P25*P25-P6*P6+P7*P7)/(2*(P16-P25))
+      P38=((P14*P14/P15+P15+P36*P16-P36*P37)+SQRT((P14*P14/P15+P15-P36*P37+P36*P16)*(P14*P14/P15+P15-P36*P37+P36*P16)-(P14*P14/(P15*P15)+1+P36*P36)*(P14*P14+P15*P15+P37*P37-2*P37*P16+P16*P16-P6*P6)))/(P14*P14/(P15*P15)+1+P36*P36)
+      P39=(P36*P38+P37)
+      P40=P14/P15*P38
+
+; ////////////////////////////
+; Theta angles (Joint Space)
+; ////////////////////////////
+      P41=ACOS((P8*P30-P8*P8+P9*P28-P9*P9+P10*P29-P10*P10)/(SQRT(P8*P8+P9*P9+P10*P10)*SQRT((P30-P8)*(P30-P8)+(P28-P9)*(P28-P9)+(P29-P10)*(P29-P10))))
+      P42=ACOS((P11*P35-P11*P11+P12*P33-P12*P12+P13*P34-P13*P13)/(SQRT(P11*P11+P12*P12+P13*P13)*SQRT((P35-P11)*(P35-P11)+(P33-P12)*(P33-P12)+(P34-P13)*(P34-P13))))
+      P43=ACOS((P14*P40-P14*P14+P15*P38-P15*P15+P16*P39-P16*P16)/(SQRT(P14*P14+P15*P15+P16*P16)*SQRT((P40-P14)*(P40-P14)+(P38-P15)*(P38-P15)+(P39-P16)*(P39-P16))))
+
+; ///////////////////////////////////////////////////////
+; Aditional definition of negative angles and 0 degrees
+; ///////////////////////////////////////////////////////
+      IF(P29>0)
+        P41=-P41
+      ENDI
+      IF(P34>0)
+        P42=-P42
+      ENDI
+      IF(P39>0)
+        P43=-P43
+      ENDI
+      IF(P29=0)
+        P41=0
+      ENDI
+      IF(P34=0)
+        P42=0
+      ENDI
+      IF(P39=0)
+        P43=0
+      ENDI
+; /////////////////////////////////////
+; MOVING TO COORDINATE
+; ////////////////////////////////////
+      F5000 			; Set up speed
+	  TA20
+      ABS			; Absolute coordinate
+      LINA(P41)B(P42)C(P43)	; Linear movement for each theta angle
+;
+; ============================= END ===========================
+CLOSE
