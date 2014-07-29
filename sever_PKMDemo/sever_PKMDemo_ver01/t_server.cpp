@@ -41,6 +41,9 @@ IplImage * showimg = cvCreateImage(cvSize(DST_IMG_WIDTH, DST_IMG_HEIGH), IPL_DEP
 IplImage * hsv_showimg = cvCreateImage(cvSize(DST_IMG_WIDTH, DST_IMG_HEIGH), IPL_DEPTH_8U, 3);
 IplImage * hue_showimg = cvCreateImage(cvSize(DST_IMG_WIDTH, DST_IMG_HEIGH), IPL_DEPTH_8U, 1);
 
+ CvRect Rec_roi;
+ 
+
 Mat grabimage;
 char GUIInput ;
 ////*************Timer************************
@@ -77,6 +80,8 @@ int temp_num;
 ////*******************Rotate Temp****************
 
 void rotateImage(IplImage* img, IplImage *img_rotate, int  degree);
+CvPoint center;
+float radius;
 
 
 //******************Img2global param*****************
@@ -94,11 +99,13 @@ float down_sample = 4;
 void on_mouse4(int event, int x,int y,int flags, void* param);
 CvPoint tracking_moment(IplImage* treatedimg);
 string pre_fetch(CvPoint es_g);
-float tran_2GX(int img_y);
-float tran_2GY(int img_x);
+float tran_2GX(int img_x);
+float tran_2GY(int img_y ,  int img_x);
 
 
 int main(){
+
+	Rec_roi = cvRect(25,0,200,180);
 
 	int init_pipe = 0;
 	int recv_num = 0;
@@ -154,19 +161,25 @@ start:
 	cout<<"Input temp stage clear"<<endl;
 
 	int rs232_idx = 0;
-
-
+	IplImage * roi_src;
+	
 	while(true){
-
-		
+		int no_sim = 0;
+		cvResetImageROI(hue_showimg);
 		grabimage = grab->Grabimg(pMemVoid , img , grabimage , hCam ,  img_width , img_height);
 		cvResize(img,showimg);
 		cvResize(img,src);
 		cvCvtColor(showimg , hsv_showimg , CV_BGR2HSV );
-		cvSplit(hsv_showimg,0,0,hue_showimg,0);
 
+		cvSplit(hsv_showimg,0,0,hue_showimg,0);
+		cvSetImageROI(hue_showimg , Rec_roi );
+
+		cvSmooth(hue_showimg , hue_showimg , CV_GAUSSIAN ,3,3,0,0);
+
+		//cvInRangeS(hue_showimg , cvScalar(50,0,0,0),cvScalar(255,0,0,0),hue_showimg);
 		
-		int no_sim;
+		cvShowImage("hue_src" , hue_showimg);
+		
 
 		if(tempdata.size() != 0){
 			max_temp[0] = 0;
@@ -184,36 +197,34 @@ start:
 			for(int i = 0 ; i < tempdata.size() ; i++){
 
 				//cout<<tempdata.size()<<endl;
-
-				size.width = DST_IMG_WIDTH - tempdata[i]->width  + 1;      
+				no_sim++;
+				size.width = 200 - tempdata[i]->width  + 1;      
 				size.height = DST_IMG_HEIGH - tempdata[i]->height + 1;
 				dstimg = cvCreateImage(size, IPL_DEPTH_32F, 1);  
 
 				
-	
 
 			   cvMatchTemplate(hue_showimg , tempdata[i] , dstimg, CV_TM_CCOEFF_NORMED);		
 			   cvMinMaxLoc(dstimg, &min, &max, &mintemp, &maxtemp);
-					//cvReleaseImage(&temp_rot);
+					//cvReleaseImage(&temp_rot);	
 
-					
-
-					if(max > 0.55){
-
+					if(max > 0.54){
 						cout<<"max = "<<max<<endl;
-
+						cout<<"Most sim temp = "<< no_sim + 1 <<endl;
+						
 						minLoc = mintemp;
 						maxLoc = maxtemp;
+						maxLoc.x = maxtemp.x+25;
 						no_sim = i;
 
-						grab_p.x = temp_center[no_sim].x + maxLoc.x;
+						grab_p.x = temp_center[no_sim].x + maxLoc.x ;
 						grab_p.y = temp_center[no_sim].y + maxLoc.y;
 											
 						
-						cout<<"Most sim temp = "<< no_sim + 1 <<endl;
+						
 									
 						rec_max = cvPoint(maxLoc.x+tempdata[no_sim]->width , maxLoc.y+tempdata[no_sim]->height);			
-						cvRectangle(showimg, maxLoc, rec_max, cvScalar(0,255,150),1,CV_AA,0);		
+						cvRectangle(showimg, maxLoc, rec_max, cvScalar(0,255,180),1,CV_AA,0);		
 						
 						v_grap.push_back(grab_p);
 						v_max.push_back(maxLoc);
@@ -246,7 +257,7 @@ start:
 				Sleep(50);
 
 				char pre_y[10];
-				sprintf(pre_y, "%.3f", tran_2GY(v_grap[0].y));
+				sprintf(pre_y, "%.3f", tran_2GY(v_grap[0].y , v_grap[0].x));
 				//cout<<"sc_xy = "<<v_grap[0].y<<endl;
 				ps->send_msg(pre_y);
 
@@ -302,8 +313,8 @@ start:
 		if(GUIInput=='q') goto endstream;
 	}
 
-	choose_temp = cvCloneImage(src);
-	cvShowImage("choose_temp",src);   
+	choose_temp = cvCloneImage(showimg);
+	cvShowImage("choose_temp",showimg);   
 	cvSetMouseCallback("choose_temp",on_mouse4); 
 	cvWaitKey(0);
 	goto start;
@@ -317,16 +328,24 @@ void on_mouse4(int event, int x,int y,int flags, void* param){
 	
 
     if(event == CV_EVENT_LBUTTONDOWN){    //left button of mouse is down  
-        ROI_rect.x=x;  
-        ROI_rect.y=y;  
+       ROI_rect.x=x;  
+       ROI_rect.y=y;  
+		center = cvPoint(x,y);
+		
+
         check_line_state=true;  
     }  
     else if(check_line_state && event == CV_EVENT_MOUSEMOVE){  
-        showtemp = cvCreateImage(cvGetSize(choose_temp), IPL_DEPTH_8U, 3);//use Imgshow to show that we draw a green rect in it    
+
+		
+		showtemp = cvCreateImage(cvGetSize(choose_temp), choose_temp->depth, choose_temp->nChannels);//use Imgshow to show that we draw a green rect in it    
         showtemp  = cvCloneImage(choose_temp);  
         p1=cvPoint(ROI_rect.x,ROI_rect.y);  
         p2=cvPoint(x,y);  
+
+		//radius = abs(sqrt((x - ROI_rect.x)^2 + ( y - ROI_rect.y)^2));
         cvRectangle(showtemp,p1,p2,CV_RGB(0,255,150),thickness,CV_AA,0);  
+		cvCircle(showtemp,center ,radius,CV_RGB(0,255,150),3,CV_AA,0);
 		
 		cvShowImage("choose_temp",showtemp);   
         cvReleaseImage(& showtemp);   
@@ -334,15 +353,19 @@ void on_mouse4(int event, int x,int y,int flags, void* param){
     else if(check_line_state && event == CV_EVENT_LBUTTONUP){ 
 		
 		cvDestroyWindow("choose_temp");
-
+		
         ROI_rect.width = abs(x - ROI_rect.x);   
         ROI_rect.height = abs(y - ROI_rect.y);
+		//ROI_rect.x = ROI_rect.x - radius;
+		//ROI_rect.y = ROI_rect.y - radius;
+		//ROI_rect.width = 2*radius;   
+        //ROI_rect.height = 2*radius;
 
         cvSetImageROI(choose_temp, ROI_rect);   
         
         IplImage* dstImg;  
         
-        ROIImg = cvCreateImage(cvSize(ROI_rect.width,ROI_rect.height),8,3);  
+        ROIImg = cvCreateImage(cvSize(ROI_rect.width,ROI_rect.height), choose_temp->depth, choose_temp->nChannels);  
 		
         cvCopy(choose_temp,ROIImg);  
         cvResetImageROI(showimg);  
@@ -359,24 +382,26 @@ void on_mouse4(int event, int x,int y,int flags, void* param){
 			
 		
 
-			for(int j = 0 ; j < 361 ; j =  j + 36){	
+			for(int j = 0 ; j < 361 ; j =  j + 20){	
 
-				IplImage * server_temp = cvCreateImage(cvSize(ROIImg->width*sc_rate , ROIImg->height*sc_rate) , ROIImg->depth,ROIImg->nChannels);
-				IplImage * shue_temp = cvCreateImage(cvSize(ROIImg->width*sc_rate , ROIImg->height*sc_rate) , ROIImg->depth,1);
-				IplImage* temp_rot;
+				IplImage * server_temp = cvCreateImage(cvSize(ROIImg->width , ROIImg->height),ROIImg->depth,ROIImg->nChannels);
+				IplImage * shue_temp = cvCreateImage(cvSize(ROIImg->width , ROIImg->height) , ROIImg->depth,1);
+				IplImage* temp_rot = cvCreateImage(cvSize(ROIImg->width , ROIImg->height) , ROIImg->depth,1);
 				temp_num++;
 
-				cvCvtColor(ROIImg , server_temp , CV_BGR2HSV );
+			    cvCvtColor(ROIImg , server_temp , CV_BGR2HSV );
 				cvSplit(server_temp,0,0,shue_temp,0);
-						
+				cvSmooth(shue_temp , shue_temp , CV_GAUSSIAN ,3,3,0,0);
+				//cvInRangeS(shue_temp , cvScalar(50,0,0,0),cvScalar(255,0,0,0),shue_temp);		
 				rotateImage(shue_temp , temp_rot , j);
+				
 				
 				sprintf(temp, "C://temp_img/server/temp_%d.jpg",temp_num);
 				cout<<"write file no. = "<<temp_num<<endl;
 				cvSaveImage(temp,  temp_rot);
 
 				cvReleaseImage(&server_temp);
-				cvReleaseImage(&shue_temp);
+			    cvReleaseImage(&shue_temp);
 				cvReleaseImage(&temp_rot);
 			
 			}
@@ -428,15 +453,15 @@ CvPoint tracking_moment(IplImage* treatedimg){
 
 float tran_2GX(int img_x){
 
-	float gx = Ax*(down_sample*img_x  + Bx) + 50;
+	float gx = Ax*(down_sample*img_x  + Bx+ 150) ;
 	cout<<"gx ="<<gx<<endl;
 	cout<<"px ="<<img_x<<endl;
 	return gx;
 }
 
-float tran_2GY(int img_y){
-	
-	float gy = -Ay*(down_sample*img_y + By) + 30 ;
+float tran_2GY(int img_y , int img_x){
+	 
+	float gy = -Ay*(down_sample*img_y + By) + 100 - 0.3*abs(img_x-100) ;
 	cout<<"gy ="<<gy<<endl;
 	cout<<"py ="<<img_y<<endl;
 	return gy;
@@ -469,5 +494,5 @@ void rotateImage(IplImage* img, IplImage *img_rotate,int degree)
     CvMat M = cvMat( 2, 3, CV_32F, m );  
     cv2DRotationMatrix( center, degree,1, &M);  
    
-    cvWarpAffine(img,img_rotate, &M,CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS,cvScalarAll(0) );  
+    cvWarpAffine(img,img_rotate, &M,CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS,cvScalarAll(1) );  
 }  

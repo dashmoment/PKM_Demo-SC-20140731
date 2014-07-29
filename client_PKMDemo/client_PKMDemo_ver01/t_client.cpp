@@ -177,7 +177,7 @@ int main(){
 					pre_y  = recv_data;
 
 					if (rs_idx == 0){
-						string fix_y = "110";
+						
 						string t_str2 = send_y + pre_y ;
 						com->write_port(t_str2);
 						Sleep(10);
