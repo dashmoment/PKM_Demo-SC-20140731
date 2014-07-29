@@ -207,19 +207,15 @@ start:
 				size.height = DST_IMG_HEIGH - tempdata[i]->height + 1;
 				dstimg = cvCreateImage(size, IPL_DEPTH_32F, 1);  
 
-				for(int j = 0 ; j < 361 ; j =  j + 45){
-
 				
-					temp_rot = cvCreateImage(cvSize(tempdata[i]->width , tempdata[i]->height),tempdata[i]->depth,tempdata[i]->nChannels);
-					rotateImage(tempdata[i] , temp_rot , j);
 			
 					//cout<<"angle = " << j <<endl;
 					
 					//Sleep(500);
 
-					cvMatchTemplate(showimg, temp_rot , dstimg, CV_TM_CCOEFF_NORMED);		
+					cvMatchTemplate(showimg, tempdata[i] , dstimg, CV_TM_CCOEFF_NORMED);		
 					cvMinMaxLoc(dstimg, &min, &max, &mintemp, &maxtemp);
-					cvReleaseImage(&temp_rot);
+					//cvReleaseImage(&temp_rot);
 
 					
 
@@ -247,7 +243,7 @@ start:
 							
 					}
 					
-				}
+				
 
 			}
 
@@ -378,7 +374,7 @@ void on_mouse4(int event, int x,int y,int flags, void* param){
         //cvShowImage("ROI",ROIImg);  
 
 		if(ROIImg != NULL){		
-			temp_num++;
+			
 
 			char temp[50];
 			char temp2[50] ;
@@ -386,11 +382,16 @@ void on_mouse4(int event, int x,int y,int flags, void* param){
 			IplImage * client_temp = cvCreateImage(cvSize(ROIImg->width*sc_rate , ROIImg->height*sc_rate) , ROIImg->depth,ROIImg->nChannels);
 			IplImage * hue_temp = cvCreateImage(cvSize(ROIImg->width*sc_rate , ROIImg->height*sc_rate) , ROIImg->depth,1);
 			cout<<"write file no. = "<<temp_num<<endl;
+			temp_num++;
 			sprintf(temp, "C://temp_img/server/temp_%d.jpg",temp_num);
-			sprintf(temp2, "C://temp_img/client/temp_%d.jpg",temp_num);
 			cvSaveImage(temp,  ROIImg);
 
+			for(int j = 0 ; j < 361 ; j =  j + 36){			
+			temp_rot = cvCreateImage(cvSize(ROIImg->width , ROIImg->height),ROIImg->depth,ROIImg->nChannels);			rotateImage(ROIImg , temp_rot , j);
+			
+			}
 
+			sprintf(temp2, "C://temp_img/client/temp_%d.jpg",temp_num);
 			IplImage * temp_hsv = cvCreateImage(cvSize(ROIImg->width , ROIImg->height),ROIImg->depth,ROIImg->nChannels);
 			IplImage * temp_hue = cvCreateImage(cvSize(ROIImg->width , ROIImg->height),ROIImg->depth,1);
 
@@ -436,7 +437,7 @@ CvPoint tracking_moment(IplImage* treatedimg , IplImage* result_img){
 
 float tran_2GX(int img_x){
 
-	float gx = Ax*(down_sample*img_x  + Bx);
+	float gx = Ax*(down_sample*img_x  + Bx) + 50;
 	cout<<"gx ="<<gx<<endl;
 	cout<<"px ="<<img_x<<endl;
 	return gx;
@@ -444,7 +445,7 @@ float tran_2GX(int img_x){
 
 float tran_2GY(int img_y){
 	
-	float gy = Ay*(down_sample*img_y + By) ;
+	float gy = -Ay*(down_sample*img_y + By) + 30 ;
 	cout<<"gy ="<<gy<<endl;
 	cout<<"py ="<<img_y<<endl;
 	return gy;

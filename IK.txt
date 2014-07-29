@@ -51,16 +51,46 @@ OPEN PROG 41 CLEAR
 ;
 ; ================== TARGET DESTINATION =========================
 ; PLEASE INSERT YOUR DESIRED TARGET COORDINATE BELOW
-      P197= 0			; E_x
-      P196= 0 			; E_y
+
+WHILE(P197>0)
+      P197= 30			; E_x
+      P196= 30 			; E_y
       P193= -259.3		; E_z
-;
+      GOSUB400
+      GOSUB200
+	  
+	  P197= 30			; E_x
+      P196= 30 			; E_y
+      P193= -209.3		; E_z
+      GOSUB400
+      GOSUB200
+	  
+	  P197= 50			; E_x
+      P196= 30 			; E_y
+      P193= -209.3		; E_z
+      GOSUB400
+      GOSUB200
+	  
+	  P197= 30			; E_x
+      P196= 30 			; E_y
+      P193= -209.3		; E_z
+      GOSUB400
+      GOSUB200
+	  
+	  P197= 30			; E_x
+      P196= 50 			; E_y
+      P193= -209.3		; E_z
+      GOSUB400
+      GOSUB200
+ENDWHILE
 ; ================================================================
 ;
 ; Adjusting The end-effector's coordinate. The further the end-effector
 ; goes, the greater the error. 
 ; But the deviation does not impose serious issue with the contest's 
 ; requirements by now :P 
+
+N400
 ;
 ; #1 Parameters
       P97=P197*7.15/10		; x
@@ -104,6 +134,8 @@ OPEN PROG 41 CLEAR
 ; ////////////////////////////////
 ;       Inverse Kinematics
 ; ///////////////////////////////
+
+
       P2001=(-1*(P8*P8)/P9+P17*P8/P9-P9+P18)/(P10-P19)
       P27=(P8*P8-P17*P17+P9*P9-P18*P18+P10*P10-P19*P19-P6*P6+P7*P7)/(2*(P10-P19))
       P28=((P8*P8/P9+P9+P2001*P10-P2001*P27)-SQRT((P8*P8/P9+P9-P2001*P27+P2001*P10)*(P8*P8/P9+P9-P2001*P27+P2001*P10)-(P8*P8/(P9*P9)+1+P2001*P2001)*(P8*P8+P9*P9+P27*P27-2*P27*P10+P10*P10-P6*P6)))/(P8*P8/(P9*P9)+1+P2001*P2001)
@@ -148,12 +180,18 @@ OPEN PROG 41 CLEAR
       IF(P39=0)
         P43=0
       ENDI
+RET
 ; /////////////////////////////////////
 ; MOVING TO COORDINATE
 ; ////////////////////////////////////
+
+N200
       F5000 			; Set up speed
+	  TA15
       ABS			; Absolute coordinate
       LINA(P41)B(P42)C(P43)	; Linear movement for each theta angle
+RET
 ;
 ; ============================= END ===========================
+
 CLOSE

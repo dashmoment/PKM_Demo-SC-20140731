@@ -71,9 +71,9 @@ string pre_x , pre_y;
 
 string send_x ="P197="; //General Command
 string send_y ="P196=";
-string send_z ="P193=-250";
-string call_prog ="&1b23r";
-string speed  = "F 400";
+//string send_z ="P193=-250";
+string call_prog ="&1b41r";
+string speed  = "F 5400";
 string TA  = "TA 20";
 string write_com;
 ////**************CamShift*******************************
@@ -88,6 +88,7 @@ Mat backproj;
 Rect trackWindow;
 Rect roi_cam;
 
+int rs_idx = 0;
 int cam_idx = 0;
 int cam_itr = 0;
 
@@ -120,8 +121,8 @@ float tran_2GY(int img_x);
 int main(){
 
 	com->init_port();
-	string t_str = "resplc6"; ////back to home
-	com->write_port(t_str);
+	//string t_str = "resplc6"; ////back to home
+	//com->write_port(t_str);
 
 	GrabImage *grab = new GrabImage(); 
 	hCam = grab->InitCam(pMemVoid , hCam , img_width , img_height , img_bpp);
@@ -173,17 +174,31 @@ int main(){
 				recv_data = pc->read_msg();
 
 				if(i == 0){
-
+					
 					pre_x  = recv_data;
-					cout<<"pre_x = " <<pre_x<<endl;
 
+					if (rs_idx == 0){
+					string t_str = send_x + pre_x;
+					com->write_port(t_str);
+					cout<<"pre_x = " <<t_str<<endl;
+					}
 				}
 
 				if(i == 1){
 
 					pre_y  = recv_data;
-					cout<<"pre_y = " <<pre_y<<endl;
 
+					if (rs_idx == 0){
+						string fix_y = "110";
+						string t_str2 = send_y + pre_y ;
+						com->write_port(t_str2);
+						Sleep(10);
+						//com->write_port(speed);
+						//Sleep(10);
+						com->write_port(call_prog);
+						cout<<"pre_y = " <<t_str2<<endl;
+						rs_idx = 0;
+					}
 				}
 		
 
@@ -202,9 +217,9 @@ int main(){
 
 				////********move robot to predict pose********
 			
-				write_com = send_x+pre_x+send_y+pre_y+send_z+call_prog;
+				//write_com = send_x+pre_x+send_y+pre_y+send_z+call_prog;
 
-				com->write_port(write_com);
+				//com->write_port(write_com);
 			
 			
 				////***********input temp**************(Id: check)
