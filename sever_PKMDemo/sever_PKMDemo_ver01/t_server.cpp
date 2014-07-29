@@ -38,6 +38,9 @@ HIDS hCam = 2;
 void * pMemVoid = NULL;
 IplImage * img = cvCreateImage(cvSize(img_width, img_height), IPL_DEPTH_8U, 3);
 IplImage * showimg = cvCreateImage(cvSize(DST_IMG_WIDTH, DST_IMG_HEIGH), IPL_DEPTH_8U, 3);
+IplImage * hsv_showimg = cvCreateImage(cvSize(DST_IMG_WIDTH, DST_IMG_HEIGH), IPL_DEPTH_8U, 3);
+IplImage * hue_showimg = cvCreateImage(cvSize(DST_IMG_WIDTH, DST_IMG_HEIGH), IPL_DEPTH_8U, 1);
+
 Mat grabimage;
 char GUIInput ;
 ////*************Timer************************
@@ -74,7 +77,7 @@ int temp_num;
 ////*******************Rotate Temp****************
 
 void rotateImage(IplImage* img, IplImage *img_rotate, int  degree);
-IplImage* temp_rot;
+
 
 //******************Img2global param*****************
 
@@ -89,7 +92,7 @@ float sc_rate = 3.5;
 float down_sample = 4; 
 ////********************Function****************************
 void on_mouse4(int event, int x,int y,int flags, void* param);
-CvPoint tracking_moment(IplImage* treatedimg , IplImage* result_img);
+CvPoint tracking_moment(IplImage* treatedimg);
 string pre_fetch(CvPoint es_g);
 float tran_2GX(int img_y);
 float tran_2GY(int img_x);
@@ -98,12 +101,10 @@ float tran_2GY(int img_x);
 int main(){
 
 	int init_pipe = 0;
-
 	int recv_num = 0;
 	char* recv_data;
-	char* endnote = "finished";
 
-	
+
     init_pipe = ps->init_pipe();   //// inti pipe server
 		
 	GrabImage *grab = new GrabImage(); 
@@ -113,20 +114,7 @@ int main(){
     cvNamedWindow( "Grabimage_server", 0);
 	cvvResizeWindow("Grabimage_server", 320 , 180);
 
-	//com->init_port();
-
-	/*char send_data[10];
-	string t_str = "&1b22r";
-	com->write_port(t_str);
-	Sleep(100);*/
-	//t_str = "resplc6";
-	//com->write_port(t_str);
-	//Sleep(100);
-
 	
-	//char msg[] = "test msg";
-	//ps->read_msg();
-	//ps->send_msg(msg);
 
 start:
 
@@ -149,8 +137,8 @@ start:
 			tempdata.push_back(temp_img);
 			roi_moment = cvCreateImage(cvGetSize(temp_img),IPL_DEPTH_8U,1);
 
-			cvCvtColor(temp_img, roi_moment, CV_RGB2GRAY);
-			temp_center.push_back(tracking_moment(roi_moment , showimg));			
+			//cvCvtColor(temp_img, roi_moment, CV_RGB2GRAY);
+			temp_center.push_back(tracking_moment(temp_img));			
 			cout<<"Input temp no.= "<<checkfile<<endl;
 			temp_num = checkfile;
 			checkfile++;
@@ -174,17 +162,11 @@ start:
 		grabimage = grab->Grabimg(pMemVoid , img , grabimage , hCam ,  img_width , img_height);
 		cvResize(img,showimg);
 		cvResize(img,src);
+		cvCvtColor(showimg , hsv_showimg , CV_BGR2HSV );
+		cvSplit(hsv_showimg,0,0,hue_showimg,0);
 
-		/*Rect src_ROI;
-
-		src_ROI.x = 0;
-		src_ROI.y = 0;
-		src_ROI.width = 50;
-		src_ROI.height = 50;
-
-		cvSetImageROI(showimg , src_ROI);*/
 		
-			int no_sim;
+		int no_sim;
 
 		if(tempdata.size() != 0){
 			max_temp[0] = 0;
@@ -208,13 +190,10 @@ start:
 				dstimg = cvCreateImage(size, IPL_DEPTH_32F, 1);  
 
 				
-			
-					//cout<<"angle = " << j <<endl;
-					
-					//Sleep(500);
+	
 
-					cvMatchTemplate(showimg, tempdata[i] , dstimg, CV_TM_CCOEFF_NORMED);		
-					cvMinMaxLoc(dstimg, &min, &max, &mintemp, &maxtemp);
+			   cvMatchTemplate(hue_showimg , tempdata[i] , dstimg, CV_TM_CCOEFF_NORMED);		
+			   cvMinMaxLoc(dstimg, &min, &max, &mintemp, &maxtemp);
 					//cvReleaseImage(&temp_rot);
 
 					
@@ -233,18 +212,15 @@ start:
 						
 						cout<<"Most sim temp = "<< no_sim + 1 <<endl;
 									
-						rec_max = cvPoint(maxLoc.x+ tempdata[no_sim]->width, maxLoc.y+tempdata[no_sim]->height);			
+						rec_max = cvPoint(maxLoc.x+tempdata[no_sim]->width , maxLoc.y+tempdata[no_sim]->height);			
 						cvRectangle(showimg, maxLoc, rec_max, cvScalar(0,255,150),1,CV_AA,0);		
 						
 						v_grap.push_back(grab_p);
 						v_max.push_back(maxLoc);
-						cvReleaseImage(&temp_rot);
+						
 						break;
 							
-					}
-					
-				
-
+					}		
 			}
 
 			if(v_grap.size() != 0){
@@ -307,7 +283,7 @@ start:
 				//char endnote[] = "1";
 				//int end = recv_num;
    
-				cout<<"Send to clinet stage clear "<< recv_num <<endl;
+				cout<<"read from clinet stage clear : "<< recv_num <<endl;
 							
 				if(recv_num == 0){
 					rs232_idx = 0;
@@ -379,28 +355,43 @@ void on_mouse4(int event, int x,int y,int flags, void* param){
 			char temp[50];
 			char temp2[50] ;
 
-			IplImage * client_temp = cvCreateImage(cvSize(ROIImg->width*sc_rate , ROIImg->height*sc_rate) , ROIImg->depth,ROIImg->nChannels);
-			IplImage * hue_temp = cvCreateImage(cvSize(ROIImg->width*sc_rate , ROIImg->height*sc_rate) , ROIImg->depth,1);
-			cout<<"write file no. = "<<temp_num<<endl;
-			temp_num++;
-			sprintf(temp, "C://temp_img/server/temp_%d.jpg",temp_num);
-			cvSaveImage(temp,  ROIImg);
+			//IplImage * client_temp = cvCreateImage(cvSize(ROIImg->width*sc_rate , ROIImg->height*sc_rate) , ROIImg->depth,ROIImg->nChannels);
+			
+		
 
-			for(int j = 0 ; j < 361 ; j =  j + 36){			
-			temp_rot = cvCreateImage(cvSize(ROIImg->width , ROIImg->height),ROIImg->depth,ROIImg->nChannels);			rotateImage(ROIImg , temp_rot , j);
+			for(int j = 0 ; j < 361 ; j =  j + 36){	
+
+				IplImage * server_temp = cvCreateImage(cvSize(ROIImg->width*sc_rate , ROIImg->height*sc_rate) , ROIImg->depth,ROIImg->nChannels);
+				IplImage * shue_temp = cvCreateImage(cvSize(ROIImg->width*sc_rate , ROIImg->height*sc_rate) , ROIImg->depth,1);
+				IplImage* temp_rot;
+				temp_num++;
+
+				cvCvtColor(ROIImg , server_temp , CV_BGR2HSV );
+				cvSplit(server_temp,0,0,shue_temp,0);
+						
+				rotateImage(shue_temp , temp_rot , j);
+				
+				sprintf(temp, "C://temp_img/server/temp_%d.jpg",temp_num);
+				cout<<"write file no. = "<<temp_num<<endl;
+				cvSaveImage(temp,  temp_rot);
+
+				cvReleaseImage(&server_temp);
+				cvReleaseImage(&shue_temp);
+				cvReleaseImage(&temp_rot);
 			
 			}
 
-			sprintf(temp2, "C://temp_img/client/temp_%d.jpg",temp_num);
-			IplImage * temp_hsv = cvCreateImage(cvSize(ROIImg->width , ROIImg->height),ROIImg->depth,ROIImg->nChannels);
-			IplImage * temp_hue = cvCreateImage(cvSize(ROIImg->width , ROIImg->height),ROIImg->depth,1);
+			//sprintf(temp2, "C://temp_img/client/temp_%d.jpg",temp_num);
+			//IplImage * temp_hsv = cvCreateImage(cvSize(ROIImg->width , ROIImg->height),ROIImg->depth,ROIImg->nChannels);
+			//IplImage * temp_hue = cvCreateImage(cvSize(ROIImg->width , ROIImg->height),ROIImg->depth,1);
+			//IplImage * hue_temp = cvCreateImage(cvSize(ROIImg->width*sc_rate , ROIImg->height*sc_rate) , ROIImg->depth,1);
 
-			cvCvtColor(ROIImg , temp_hsv , CV_BGR2HSV );
-			cvSplit(temp_hsv,0,0,temp_hue,0);
-			//cvShowImage("temp_hsv",temp_rot );
+			//cvCvtColor(ROIImg , temp_hsv , CV_BGR2HSV );
+			//cvSplit(temp_hsv,0,0,temp_hue,0);
+			////cvShowImage("temp_hsv",temp_rot );
 
-			cvResize(temp_hue, hue_temp,INTER_LANCZOS4 );
-			cvSaveImage(temp2,  hue_temp);
+			//cvResize(temp_hue, hue_temp,INTER_LANCZOS4 );
+			//cvSaveImage(temp2,  hue_temp);
 
 			
 
@@ -414,7 +405,7 @@ void on_mouse4(int event, int x,int y,int flags, void* param){
     }    
 }  
 
-CvPoint tracking_moment(IplImage* treatedimg , IplImage* result_img){
+CvPoint tracking_moment(IplImage* treatedimg){
 
 	CvPoint center;
 	CvMoments oMoments;

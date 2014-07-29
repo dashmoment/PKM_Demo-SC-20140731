@@ -123,6 +123,7 @@ int main(){
 	com->init_port();
 	//string t_str = "resplc6"; ////back to home
 	//com->write_port(t_str);
+	pc->client_init();   //// init pipe client
 
 	GrabImage *grab = new GrabImage(); 
 	hCam = grab->InitCam(pMemVoid , hCam , img_width , img_height , img_bpp);
@@ -132,38 +133,25 @@ int main(){
 
 	 
 	int response;
-	
-	pc->client_init();   //// init pipe client
-
-
-	//char msg[] = "test msg";
-	//pc->send_msg(msg);
-	
-
-	//IplImage * roi_img = cvCreateImage(cvSize(roi_rect.width,roi_rect.height),8,3); 
 	int response_idx = 0;
+	
+	
+	double min, max;
+	CvPoint mintemp;
+	CvPoint maxtemp;
+
+	
 
 	while(true){
 
-		double min, max;
-		CvPoint mintemp;
-		CvPoint maxtemp;
-
-		grabimage = grab->Grabimg(pMemVoid , img , grabimage , hCam ,  img_width , img_height);
 		
-		resize(grabimage,src2 , Size(DST_IMG_WIDTH, DST_IMG_HEIGH)); //// Mat for camshift
+
+		grabimage = grab->Grabimg(pMemVoid , img , grabimage , hCam ,  img_width , img_height);	
+
+		resize(grabimage,src2 , Size(DST_IMG_WIDTH, DST_IMG_HEIGH)); //// Mat for camshift	
+		cvResize(img,showimg);    //// Iplimage*
 
 
-		
-		cvResize(img,showimg);         //// Iplimage*
-		//cvSetImageROI(showimg , roi_rect);
-		//cvCopy(showimg,roi_img);  
-		//cvResetImageROI(showimg);   
-		//cvShowImage("Grabimage_client", showimg);
-
-		
-		//roi = src2(roi_rect);
-		//esize(grabimage,src2 , Size(roi_rect.width , roi_rect.height));
 
 			////************************recv data***************************
 
@@ -213,7 +201,7 @@ int main(){
 			response_idx = 1;
 		}
 
-		if(recv_data){
+		if(response_idx = 1){
 
 				////********move robot to predict pose********
 			
