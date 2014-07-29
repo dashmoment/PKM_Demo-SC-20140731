@@ -9,9 +9,11 @@
 #include <opencv2/video/video.hpp>
 #include <opencv2/video/tracking.hpp>
 
-
+#include <windows.h>
+#include <time.h>
 #include <iostream>  
 #include <stdio.h>
+#include <stdlib.h>
 #include <io.h> 
 
 using namespace std;  
@@ -38,7 +40,10 @@ IplImage * img = cvCreateImage(cvSize(img_width, img_height), IPL_DEPTH_8U, 3);
 IplImage * showimg = cvCreateImage(cvSize(DST_IMG_WIDTH, DST_IMG_HEIGH), IPL_DEPTH_8U, 3);
 Mat grabimage;
 char GUIInput ;
+////*************Timer************************
 
+clock_t t1, t2;
+int time_idx = 0;
 
 ////**************TM**************************
 IplImage * choose_temp =  cvCreateImage(cvSize(img_width, img_height), IPL_DEPTH_8U, 3);
@@ -202,7 +207,7 @@ start:
 				size.height = DST_IMG_HEIGH - tempdata[i]->height + 1;
 				dstimg = cvCreateImage(size, IPL_DEPTH_32F, 1);  
 
-				for(int j = 0 ; j < 361 ; j =  j + 30){
+				for(int j = 0 ; j < 361 ; j =  j + 45){
 
 				
 					temp_rot = cvCreateImage(cvSize(tempdata[i]->width , tempdata[i]->height),tempdata[i]->depth,tempdata[i]->nChannels);
@@ -218,36 +223,29 @@ start:
 
 					
 
-					if(max > 0.5){
+					if(max > 0.55){
+
 						cout<<"max = "<<max<<endl;
-						//cvShowImage("Rotate temp" , temp_rot);
-						//max_temp[1] = max;			
-						//if(max_temp[1] >= max_temp[0]){
 
-							//max_temp[0] = max_temp[1];
-							minLoc = mintemp;
-							maxLoc = maxtemp;
-							no_sim = i;
+						minLoc = mintemp;
+						maxLoc = maxtemp;
+						no_sim = i;
 
-							cout<<"Most sim temp = "<< no_sim + 1 <<endl;
-							//cout<<"Max = "<< max_temp[0] <<endl;
-
-							
-
-							rec_max = cvPoint(maxLoc.x+ tempdata[no_sim]->width, maxLoc.y+tempdata[no_sim]->height);			
-							cvRectangle(showimg, maxLoc, rec_max, cvScalar(0,255,150),1,CV_AA,0);		
+						grab_p.x = temp_center[no_sim].x + maxLoc.x;
+						grab_p.y = temp_center[no_sim].y + maxLoc.y;
+											
 						
-							grab_p.x = temp_center[no_sim].x + maxLoc.x;
-							grab_p.y = temp_center[no_sim].y + maxLoc.y;
-
-							v_grap.push_back(grab_p);
-							v_max.push_back(maxLoc);
-							//rectempnum.push_back(no_sim);
-							cvReleaseImage(&temp_rot);
-							break;
-						//}			
+						cout<<"Most sim temp = "<< no_sim + 1 <<endl;
+									
+						rec_max = cvPoint(maxLoc.x+ tempdata[no_sim]->width, maxLoc.y+tempdata[no_sim]->height);			
+						cvRectangle(showimg, maxLoc, rec_max, cvScalar(0,255,150),1,CV_AA,0);		
+						
+						v_grap.push_back(grab_p);
+						v_max.push_back(maxLoc);
+						cvReleaseImage(&temp_rot);
+						break;
+							
 					}
-
 					
 				}
 
@@ -263,30 +261,45 @@ start:
 				}
 			}
 			 
-			cout<<"Recognized stage clear"<<endl;
+			//cout<<"Recognized stage clear"<<endl;
 
 			if(rs232_idx == 0 && v_grap.size() > 0){ //// 1st sender
 
 			
 				char pre_x[10];
 				sprintf(pre_x, "%.3f", tran_2GX(v_grap[0].x));
-				cout<<"sc_x = "<<v_grap[0].x<<endl;
+				//cout<<"sc_x = "<<v_grap[0].x<<endl;
 				ps->send_msg(pre_x);
 
 				Sleep(50);
 
 				char pre_y[10];
 				sprintf(pre_y, "%.3f", tran_2GY(v_grap[0].y));
-				cout<<"sc_xy = "<<v_grap[0].y<<endl;
+				//cout<<"sc_xy = "<<v_grap[0].y<<endl;
 				ps->send_msg(pre_y);
 
 				char temp_id[10];
-				sprintf(temp_id, "%d",  no_sim+1);
+				//sprintf(temp_id, "%d",  no_sim+1);
 				ps->send_msg(temp_id);
 				
 				
 				cout<<"Send to client"<<endl;
 				rs232_idx = 1;
+
+
+				//////***timer**********************
+				//if(time_idx == 1){
+				//			t2 = clock();
+				//			time_idx = 2;
+				//			cout<<"time = "<<(t2-t1)/(double)(CLOCKS_PER_SEC)<<endl;
+				//			cout<<"dst y = "<<pre_y<<endl;
+				//			system("pause");
+				//		}
+				//			if(time_idx == 0){
+				//			t1 = clock();
+				//			cout<<"origin y = "<<pre_y<<endl;
+				//			time_idx = 1;
+				//		}
 				
 			}
 
