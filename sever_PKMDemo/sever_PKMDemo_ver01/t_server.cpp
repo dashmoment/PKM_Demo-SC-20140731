@@ -105,14 +105,14 @@ float tran_2GY(int img_y ,  int img_x);
 
 int main(){
 
-	Rec_roi = cvRect(25,0,200,180);
+	Rec_roi = cvRect(0,0,320,180);
 
-	int init_pipe = 0;
+	//int init_pipe = 0;
 	int recv_num = 0;
 	char* recv_data;
 
 
-    init_pipe = ps->init_pipe();   //// inti pipe server
+    //init_pipe = ps->init_pipe();   //// inti pipe server
 		
 	GrabImage *grab = new GrabImage(); 
 
@@ -198,7 +198,7 @@ start:
 
 				//cout<<tempdata.size()<<endl;
 				no_sim++;
-				size.width = 200 - tempdata[i]->width  + 1;      
+				size.width = DST_IMG_WIDTH - tempdata[i]->width  + 1;      
 				size.height = DST_IMG_HEIGH - tempdata[i]->height + 1;
 				dstimg = cvCreateImage(size, IPL_DEPTH_32F, 1);  
 
@@ -208,7 +208,7 @@ start:
 			   cvMinMaxLoc(dstimg, &min, &max, &mintemp, &maxtemp);
 					//cvReleaseImage(&temp_rot);	
 
-					if(max > 0.54){
+					if(max > 0.5){
 						cout<<"max = "<<max<<endl;
 						cout<<"Most sim temp = "<< no_sim + 1 <<endl;
 						
@@ -224,7 +224,7 @@ start:
 						
 									
 						rec_max = cvPoint(maxLoc.x+tempdata[no_sim]->width , maxLoc.y+tempdata[no_sim]->height);			
-						cvRectangle(showimg, maxLoc, rec_max, cvScalar(0,255,180),1,CV_AA,0);		
+						
 						
 						v_grap.push_back(grab_p);
 						v_max.push_back(maxLoc);
@@ -239,6 +239,7 @@ start:
 				for(int j = 0 ; j < v_grap.size() ; j++){
 
 					cvCircle( showimg , v_grap[j] , 3, Scalar(0,0,255), 1);
+					cvRectangle(showimg, maxLoc, rec_max, cvScalar(0,255,180),1,CV_AA,0);		
 							
 							
 				}
@@ -252,18 +253,18 @@ start:
 				char pre_x[10];
 				sprintf(pre_x, "%.3f", tran_2GX(v_grap[0].x));
 				//cout<<"sc_x = "<<v_grap[0].x<<endl;
-				ps->send_msg(pre_x);
+				//ps->send_msg(pre_x);
 
 				Sleep(50);
 
 				char pre_y[10];
 				sprintf(pre_y, "%.3f", tran_2GY(v_grap[0].y , v_grap[0].x));
 				//cout<<"sc_xy = "<<v_grap[0].y<<endl;
-				ps->send_msg(pre_y);
+				//ps->send_msg(pre_y);
 
 				char temp_id[10];
 				//sprintf(temp_id, "%d",  no_sim+1);
-				ps->send_msg(temp_id);
+				//ps->send_msg(temp_id);
 				
 				
 				cout<<"Send to client"<<endl;
@@ -289,16 +290,16 @@ start:
 			if(rs232_idx == 1){
 
 			
-				recv_num = atoi(ps->read_msg()); //// 1st reader
+				//recv_num = atoi(ps->read_msg()); //// 1st reader
 			
 				//char endnote[] = "1";
 				//int end = recv_num;
    
 				cout<<"read from clinet stage clear : "<< recv_num <<endl;
 							
-				if(recv_num == 0){
+				//if(recv_num == 0){
 					rs232_idx = 0;
-				}
+				//}
 
 			}
 

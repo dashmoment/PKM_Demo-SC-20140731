@@ -1,0 +1,156 @@
+﻿OPEN PROG42 CLEAR
+ABS
+M6=0
+M81=1000
+
+F10000
+TA15
+TS0
+
+
+P651=500		;Dwell time
+P652=50	;Dwell time - fetch
+
+P647=10000	;Speed F
+P648=1000
+
+;PID
+P653=4600
+P654=100
+P655=1600
+P656=1
+
+
+I150=1
+I120=P653
+I220=P653
+I320=P653
+I123=P654
+I223=P654
+I323=P654
+I121=P655
+I221=P655
+I321=P655
+I124=P656
+I224=P656
+I324=P656
+
+WHILE(Q701!=0) ;=================BEGIN WHILE=======================
+;1p
+  P912=Q701
+  P922=Q702
+  P932=Q703
+  P913=Q704
+  P923=Q705
+  P933=Q706
+  P916=Q707
+  P926=Q708
+  P936=Q709
+  P917=Q710
+  P927=Q711
+  P937=Q712
+  GOSUB1
+  GOSUB200
+ ;2p 
+  P912=Q713
+  P922=Q714
+  P932=Q715
+  P913=Q716
+  P923=Q717
+  P933=Q718
+  P916=Q719
+  P926=Q720
+  P936=Q721
+  P917=Q722
+  P927=Q723
+  P937=Q724
+  GOSUB200
+ ;3p 
+  P912=Q725
+  P922=Q726
+  P932=Q727
+  P913=Q728
+  P923=Q729
+  P933=Q730
+  P916=Q731
+  P926=Q732
+  P936=Q733
+  P917=Q734
+  P927=Q735
+  P937=Q736
+  GOSUB200
+ ;4p 
+  P912=Q737
+  P922=Q738
+  P932=Q739
+  P913=Q740
+  P923=Q741
+  P933=Q742
+  P916=Q743
+  P926=Q744
+  P936=Q745
+  P917=Q746
+  P927=Q747
+  P937=Q748
+  GOSUB200
+  
+ 
+
+
+ENDW ;=================END WHILE=======================
+
+GOSUB101
+GOSUB2
+
+=========SUB 200 MOVE=========================
+N200
+
+M7=1
+LINA(P913)B(P923)C(P933) ;1st via point
+DWE(P652)
+
+F(P648) ;Velocity
+LINA(P912)B(P922)C(P932) ;pick p
+DWE(P651)
+
+I150=1
+F(P647)	;Velocity
+LINA(P913)B(P923)C(P933) ;1st via point
+
+LINA(P917)B(P927)C(P937) ;2nd via p
+DWE(P652)
+
+F(P648)	;Velocity
+LINA(P916)B(P926)C(P936) ;release p 
+DWE(P652)
+M7=0 ; Open valve
+
+
+F(P647)
+LINA(P917)B(P927)C(P937) ;2nd via p
+DWE(P651)
+M7=1
+RET
+
+
+;==========SUB 101 GOHOME======================
+N101
+M6=1
+DWE1
+M7=1
+LINA0B0C0
+GOSUB2
+RET
+
+;=============SUB N1 and N2 Display=============
+N1
+SENDC1"========================"
+SENDC1" P&P STARTS RUNNING(6 Points) "
+SENDC1"========================"
+RET
+N2
+SENDC1"========================"
+SENDC1"      P&P ENDS       "
+SENDC1"========================"
+RET
+CLOSE
