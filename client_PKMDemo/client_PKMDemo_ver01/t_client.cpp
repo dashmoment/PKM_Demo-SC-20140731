@@ -211,14 +211,14 @@ int main(){
 				int check = _access(tempname, 0);
 
 			
-				cout<<"Access = "<<check<<endl; 
+				cout<<"Access = "<<check<<endl;   
 
 				if(check == 0 ){
 				
 		
 					tempdata = cvLoadImage(tempname , -1);
 					CvSize size_t = cvGetSize(tempdata);
-					cvShowImage("temp",tempdata);
+					 cvShowImage("temp",tempdata);
 				
 
 

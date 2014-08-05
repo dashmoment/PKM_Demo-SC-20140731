@@ -188,6 +188,9 @@ start:
 			//cout<<grab_p.x<<endl;
 
 			//****************chose best match template**************************
+			IplImage *recog_temp;
+			CvRect rect;
+
 			for(int i = 0 ; i < tempdata.size() ; i++){
 
 				//cout<<tempdata.size()<<endl;
@@ -199,12 +202,15 @@ start:
 				cvMatchTemplate(showimg, tempdata[i] , dstimg, CV_TM_CCOEFF_NORMED);		
 				cvMinMaxLoc(dstimg, &min, &max, &mintemp, &maxtemp);
 
-				if(max > 0.8){
+				if(max > 0.7){
 
 					//max_temp[1] = max;			
 					//if(max_temp[1] >= max_temp[0]){
 
 						//max_temp[0] = max_temp[1];
+
+						
+
 						minLoc = mintemp;
 						maxLoc = maxtemp;
 						no_sim = i;
@@ -212,10 +218,8 @@ start:
 						cout<<"Most sim temp = "<< no_sim + 1 <<endl;
 						//cout<<"Max = "<< max_temp[0] <<endl;
 
-						IplImage *recog_temp;
-
 						rec_max = cvPoint(maxLoc.x+ tempdata[no_sim]->width, maxLoc.y+tempdata[no_sim]->height);			
-						cvRectangle(showimg, maxLoc, rec_max, cvScalar(0,255,150),1,CV_AA,0);		
+						cvRectangle(showimg, maxLoc, rec_max, cvScalar(0,255,150),-1,CV_AA,0);		
 						
 						grab_p.x = temp_center[no_sim].x + maxLoc.x;
 						grab_p.y = temp_center[no_sim].y + maxLoc.y;
@@ -227,7 +231,7 @@ start:
 						for(int j = 0 ; j < v_grap.size() ; j++){
 
 							cvCircle( showimg , v_grap[j] , 3, Scalar(0,0,255), 1);
-							cout<<"recog_temp = "<<no_sim<<endl;
+							//cout<<"recog_temp = "<<no_sim<<endl;
 							//cvShowImage("recog_temp" , tempdata[no_sim]);
 							//Sleep(500);
 						}
